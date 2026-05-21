@@ -1,0 +1,28 @@
+# Cloned upstream tooling (skills, etc.) — mirrored into .claude/skills/
+clones/
+
+# Gradle bootstrap (temporary, used to generate the wrapper)
+gradle-bootstrap/
+gradle-bootstrap.zip
+
+# Android build outputs (created later by US-1)
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+captures/
+.cxx/
+.kotlin/
+google-services.json
+GoogleService-Info.plist
+*.jks
+*.keystore
+
+# Functions
+functions/node_modules/
+functions/lib/
+
+# OS
+.DS_Store
+Thumbs.db
