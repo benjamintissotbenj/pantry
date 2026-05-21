@@ -44,7 +44,10 @@ android {
     }
 
     kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
 
     testOptions {
@@ -54,6 +57,7 @@ android {
 
     sourceSets {
         getByName("main").kotlin.srcDir("src/main/kotlin")
+        getByName("debug").kotlin.srcDir("src/debug/kotlin")
         getByName("test").kotlin.srcDir("src/test/kotlin")
         getByName("androidTest").kotlin.srcDir("src/androidTest/kotlin")
     }

@@ -23,6 +23,13 @@ GoogleService-Info.plist
 functions/node_modules/
 functions/lib/
 
+# Firebase emulator logs and data
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
+ui-debug.log
+.firebase/
+
 # OS
 .DS_Store
 Thumbs.db
