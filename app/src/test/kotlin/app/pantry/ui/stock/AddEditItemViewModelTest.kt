@@ -75,4 +75,50 @@ class AddEditItemViewModelTest {
         advanceUntilIdle()
         coVerify(exactly = 0) { stock.create(any(), any(), any(), any(), any(), any()) }
     }
+
+    @Test
+    fun `edit path submits update and dismisses`() = runTest {
+        coEvery { stock.update("h-1", "i-1", "Milk", "Fridge", StockUnit.LITER, 0.5, 1.0) } returns
+            Result.success(Unit)
+        val vm = AddEditItemViewModel(ch, stock)
+        vm.beginEdit(
+            itemId = "i-1",
+            name = "Milk",
+            quantity = 1.5,
+            unit = StockUnit.LITER,
+            threshold = 1.0,
+            category = "Fridge",
+        )
+        vm.onQuantityChange("0.5")
+        vm.submit()
+        advanceUntilIdle()
+        assertTrue(vm.uiState.value.dismissed)
+    }
+
+    @Test
+    fun `delete in edit mode calls repository`() = runTest {
+        coEvery { stock.delete("h-1", "i-1") } returns Result.success(Unit)
+        val vm = AddEditItemViewModel(ch, stock)
+        vm.beginEdit(
+            itemId = "i-1",
+            name = "Milk",
+            quantity = 1.5,
+            unit = StockUnit.LITER,
+            threshold = 1.0,
+            category = "Fridge",
+        )
+        vm.delete()
+        advanceUntilIdle()
+        coVerify { stock.delete("h-1", "i-1") }
+        assertTrue(vm.uiState.value.dismissed)
+    }
+
+    @Test
+    fun `delete in add mode is a no-op`() = runTest {
+        val vm = AddEditItemViewModel(ch, stock)
+        vm.beginAdd()
+        vm.delete()
+        advanceUntilIdle()
+        coVerify(exactly = 0) { stock.delete(any(), any()) }
+    }
 }

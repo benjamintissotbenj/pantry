@@ -1,5 +1,6 @@
 package app.pantry.ui.stock
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,6 +42,18 @@ fun StockListScreen(
     val state by viewModel.uiState.collectAsState()
     var sheetOpen by remember { mutableStateOf(false) }
 
+    val onRowClick: (StockItem) -> Unit = { item ->
+        sheetViewModel.beginEdit(
+            itemId = item.id,
+            name = item.name,
+            quantity = item.quantity,
+            unit = item.unit,
+            threshold = item.threshold,
+            category = item.category,
+        )
+        sheetOpen = true
+    }
+
     Scaffold(
         topBar = { TopAppBar(title = { Text("Stock") }) },
         floatingActionButton = {
@@ -57,7 +70,7 @@ fun StockListScreen(
             when {
                 state.isLoading -> LoadingRows()
                 state.visibleItems.isEmpty() -> EmptyState()
-                else -> ItemList(state.visibleItems)
+                else -> ItemList(state.visibleItems, onClick = onRowClick)
             }
         }
     }
@@ -90,18 +103,24 @@ private fun EmptyState() {
 }
 
 @Composable
-private fun ItemList(items: List<StockItem>) {
+private fun ItemList(items: List<StockItem>, onClick: (StockItem) -> Unit) {
     LazyColumn(Modifier.fillMaxSize().testTag("stock_list")) {
         items(items, key = { it.id }) { item ->
-            StockRow(item)
+            StockRow(item, onClick = { onClick(item) })
             HorizontalDivider()
         }
     }
 }
 
 @Composable
-private fun StockRow(item: StockItem) {
-    Box(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+private fun StockRow(item: StockItem, onClick: () -> Unit) {
+    Box(
+        Modifier
+            .testTag("stock_row_${item.id}")
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+    ) {
         val qtyText = buildString {
             append(formatQuantity(item.quantity))
             if (item.unit.displaySuffix.isNotEmpty()) {
@@ -112,7 +131,6 @@ private fun StockRow(item: StockItem) {
         Text(
             "${item.name} · $qtyText",
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.testTag("stock_row_${item.id}"),
         )
     }
 }
