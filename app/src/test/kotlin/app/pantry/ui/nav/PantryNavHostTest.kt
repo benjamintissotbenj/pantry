@@ -1,10 +1,9 @@
-package app.pantry.ui
+package app.pantry.ui.nav
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
-import app.pantry.BootstrapScreenForTest
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.navigation.compose.rememberNavController
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -13,14 +12,16 @@ import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
-class BootstrapScreenTest {
+class PantryNavHostTest {
 
     @get:Rule
     val composeRule = createComposeRule()
 
     @Test
-    fun shows_placeholder_text() {
-        composeRule.setContent { MaterialTheme { BootstrapScreenForTest() } }
-        composeRule.onNodeWithText("Pantry — bootstrap OK").assertIsDisplayed()
+    fun starts_on_auth_placeholder() {
+        composeRule.setContent {
+            PantryNavHost(navController = rememberNavController())
+        }
+        composeRule.onNodeWithText("Sign in (placeholder)").assertIsDisplayed()
     }
 }
