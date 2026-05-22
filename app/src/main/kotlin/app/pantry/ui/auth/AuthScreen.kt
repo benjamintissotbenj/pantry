@@ -22,13 +22,18 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MaterialTheme
 import androidx.hilt.navigation.compose.hiltViewModel
+import app.pantry.R
+import kotlinx.coroutines.launch
 
 @Composable
 fun AuthScreen(
@@ -58,6 +63,7 @@ fun AuthScreen(
             Spacer(Modifier.height(24.dp))
             when (state.mode) {
                 AuthUiState.Mode.Welcome -> WelcomeButtons(
+                    viewModel = viewModel,
                     onPickEmail = { viewModel.switchMode(AuthUiState.Mode.EmailSignIn) },
                     onPickSignUp = { viewModel.switchMode(AuthUiState.Mode.EmailSignUp) },
                 )
@@ -75,7 +81,30 @@ fun AuthScreen(
 }
 
 @Composable
-private fun WelcomeButtons(onPickEmail: () -> Unit, onPickSignUp: () -> Unit) {
+private fun WelcomeButtons(
+    viewModel: AuthViewModel,
+    onPickEmail: () -> Unit,
+    onPickSignUp: () -> Unit,
+) {
+    val context = LocalContext.current
+    val webClientId = stringResource(R.string.default_web_client_id)
+    val scope = rememberCoroutineScope()
+    val controller = remember(context, webClientId) { GoogleSignInController(context, webClientId) }
+
+    Button(
+        onClick = {
+            scope.launch {
+                try {
+                    val token = controller.requestIdToken() ?: return@launch
+                    viewModel.signInWithGoogle(token)
+                } catch (t: Throwable) {
+                    viewModel.onGoogleSignInError(t)
+                }
+            }
+        },
+        modifier = Modifier.fillMaxWidth().testTag("welcome_google"),
+    ) { Text("Continue with Google") }
+    Spacer(Modifier.height(8.dp))
     Button(onClick = onPickEmail, modifier = Modifier.fillMaxWidth().testTag("welcome_signin")) {
         Text("Sign in with email")
     }

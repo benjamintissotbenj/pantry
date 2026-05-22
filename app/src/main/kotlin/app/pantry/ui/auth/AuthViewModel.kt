@@ -51,6 +51,21 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun signInWithGoogle(idToken: String) {
+        if (_state.value.isSubmitting) return
+        _state.update { it.copy(isSubmitting = true, toastMessage = null) }
+        viewModelScope.launch {
+            auth.signInWithGoogle(idToken).fold(
+                onSuccess = { _state.update { it.copy(isSubmitting = false, navigateToHousehold = true) } },
+                onFailure = { e -> _state.update { it.withErrorMessage(e as? AuthError ?: AuthError.Unknown(e)) } },
+            )
+        }
+    }
+
+    fun onGoogleSignInError(e: Throwable) {
+        _state.update { it.withErrorMessage(e as? AuthError ?: AuthError.Unknown(e)) }
+    }
+
     fun consumeNavigation() = _state.update { it.copy(navigateToHousehold = false) }
     fun consumeToast() = _state.update { it.copy(toastMessage = null) }
 
