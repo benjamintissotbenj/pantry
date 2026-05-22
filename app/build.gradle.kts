@@ -97,6 +97,7 @@ dependencies {
     implementation(libs.googleid)
 
     implementation(libs.coroutines.android)
+    implementation(libs.coroutines.play.services)
 
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.junit.jupiter.params)
