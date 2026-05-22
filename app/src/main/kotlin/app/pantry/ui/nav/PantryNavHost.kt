@@ -9,19 +9,27 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import app.pantry.ui.auth.AuthScreen
 
 @Composable
-fun PantryNavHost(navController: NavHostController) {
+fun PantryNavHost(
+    navController: NavHostController,
+    authScreen: @Composable (onAuthenticated: () -> Unit) -> Unit = { onAuthenticated ->
+        AuthScreen(onAuthenticated = onAuthenticated)
+    },
+) {
     NavHost(navController = navController, startDestination = PantryRoute.Auth.path) {
-        composable(PantryRoute.Auth.path) { AuthPlaceholder() }
-        composable(PantryRoute.Household.path) { HouseholdPlaceholder() }
-        composable(PantryRoute.Home.path) { HomePlaceholder() }
+        composable(PantryRoute.Auth.path) {
+            authScreen {
+                navController.navigate(PantryRoute.Household.path) {
+                    popUpTo(PantryRoute.Auth.path) { inclusive = true }
+                }
+            }
+        }
+        composable(PantryRoute.Household.path) { Centered("Household (placeholder)") }
+        composable(PantryRoute.Home.path) { Centered("Home (placeholder)") }
     }
 }
-
-@Composable private fun AuthPlaceholder() = Centered("Sign in (placeholder)")
-@Composable private fun HouseholdPlaceholder() = Centered("Household (placeholder)")
-@Composable private fun HomePlaceholder() = Centered("Home (placeholder)")
 
 @Composable
 private fun Centered(text: String) {
