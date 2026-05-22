@@ -1,6 +1,7 @@
 package app.pantry.ui.stock
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,12 +12,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -78,6 +81,12 @@ fun StockListScreen(
                 onChange = viewModel::onSearchChange,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
             )
+            CategoryChipsRow(
+                categories = state.categories,
+                selected = state.selectedCategory,
+                onSelect = viewModel::onCategorySelect,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            )
             Box(Modifier.fillMaxSize()) {
                 when {
                     state.isLoading -> LoadingRows()
@@ -119,6 +128,34 @@ private fun SearchField(query: String, onChange: (String) -> Unit, modifier: Mod
         singleLine = true,
         modifier = modifier.testTag("stock_search"),
     )
+}
+
+@Composable
+private fun CategoryChipsRow(
+    categories: List<String>,
+    selected: String?,
+    onSelect: (String?) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        FilterChip(
+            selected = selected == null,
+            onClick = { onSelect(null) },
+            label = { Text("All") },
+            modifier = Modifier.testTag("chip_all"),
+        )
+        categories.forEach { cat ->
+            FilterChip(
+                selected = selected == cat,
+                onClick = { onSelect(cat) },
+                label = { Text(cat) },
+                modifier = Modifier.testTag("chip_$cat"),
+            )
+        }
+    }
 }
 
 @Composable
