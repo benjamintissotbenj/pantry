@@ -29,11 +29,12 @@ class GoogleSignInController(
         }
     }
 
-    private fun extractIdToken(response: GetCredentialResponse): String? {
+    private fun extractIdToken(response: GetCredentialResponse): String {
         val credential = response.credential
-        if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+        if (credential is CustomCredential &&
+            credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
             return GoogleIdTokenCredential.createFrom(credential.data).idToken
         }
-        return null
+        error("Unexpected credential type: ${credential.type}. Check webClientId and Credential Manager configuration.")
     }
 }

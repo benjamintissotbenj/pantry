@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MaterialTheme
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.pantry.R
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 @Composable
@@ -98,6 +99,7 @@ private fun WelcomeButtons(
                     val token = controller.requestIdToken() ?: return@launch
                     viewModel.signInWithGoogle(token)
                 } catch (t: Throwable) {
+                    if (t is CancellationException) throw t
                     viewModel.onGoogleSignInError(t)
                 }
             }

@@ -11,10 +11,12 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import io.mockk.coEvery
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -51,5 +53,24 @@ class GoogleSignInControllerTest {
             credentialManager = cm,
         )
         assertEquals("fake-id-token", controller.requestIdToken())
+    }
+
+    @Test
+    fun `throws on unexpected credential type`() = runTest {
+        val credential = CustomCredential("com.some.other.type", android.os.Bundle())
+        val cm: CredentialManager = mockk()
+        coEvery { cm.getCredential(any<android.content.Context>(), any<GetCredentialRequest>()) } returns
+            GetCredentialResponse(credential)
+        val controller = GoogleSignInController(
+            context = ApplicationProvider.getApplicationContext(),
+            webClientId = "test",
+            credentialManager = cm,
+        )
+        try {
+            controller.requestIdToken()
+            fail("Expected IllegalStateException")
+        } catch (e: IllegalStateException) {
+            assertTrue(e.message?.contains("Unexpected credential type") == true)
+        }
     }
 }
