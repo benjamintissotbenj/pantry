@@ -15,6 +15,8 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -45,5 +47,17 @@ class HouseholdOnboardingViewModelTest {
         vm.onNameChange("Casa")
         vm.submitCreate()
         assertTrue(vm.uiState.value.navigateToHome)
+    }
+
+    @Test
+    fun `create flow shows toast and clears submitting on failure`() = runTest {
+        coEvery { householdRepo.create("Casa", "u-1") } returns Result.failure(Exception("Network error"))
+        vm.switchMode(HouseholdOnboardingUiState.Mode.Create)
+        vm.onNameChange("Casa")
+        vm.submitCreate()
+        val s = vm.uiState.value
+        assertFalse(s.isSubmitting)
+        assertFalse(s.navigateToHome)
+        assertEquals("Network error", s.toast)
     }
 }

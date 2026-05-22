@@ -37,9 +37,10 @@ fun HouseholdOnboardingScreen(
 
     LaunchedEffect(state.navigateToHome) {
         if (state.navigateToHome) {
+            val navigatingFrom = state.mode
             viewModel.consumeNavigation()
             // For both create and join, "navigateToHome" is the signal — caller decides where to go.
-            if (state.mode == HouseholdOnboardingUiState.Mode.Create) onCreated() else onJoined()
+            if (navigatingFrom == HouseholdOnboardingUiState.Mode.Create) onCreated() else onJoined()
         }
     }
     LaunchedEffect(state.toast) {
