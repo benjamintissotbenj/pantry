@@ -1,5 +1,6 @@
 package app.pantry.ui.nav
 
+import androidx.annotation.VisibleForTesting
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Text
@@ -14,6 +15,11 @@ import app.pantry.ui.auth.AuthScreen
 @Composable
 fun PantryNavHost(
     navController: NavHostController,
+    /**
+     * The auth screen composable. Defaults to the production [AuthScreen] using Hilt-injected
+     * [AuthViewModel]. Overridden in tests that cannot bring up Hilt — see PantryNavHostTest.
+     */
+    @VisibleForTesting
     authScreen: @Composable (onAuthenticated: () -> Unit) -> Unit = { onAuthenticated ->
         AuthScreen(onAuthenticated = onAuthenticated)
     },

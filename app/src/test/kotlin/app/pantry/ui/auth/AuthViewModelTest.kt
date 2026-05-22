@@ -82,4 +82,47 @@ class AuthViewModelTest {
         assertEquals("Email or password is incorrect", state.toastMessage)
         assertFalse(state.isSubmitting)
     }
+
+    @Test
+    fun `successful sign-up transitions to navigateToHousehold = true`() = runTest {
+        coEvery { repo.signUpWithEmail("a@b.com", "secret123", "Alice") } returns
+            Result.success(UserProfile("u-1", "Alice", "a@b.com"))
+
+        vm.switchMode(AuthUiState.Mode.EmailSignUp)
+        vm.onDisplayNameChange("Alice")
+        vm.onEmailChange("a@b.com")
+        vm.onPasswordChange("secret123")
+        vm.submit()
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        assertTrue(state.navigateToHousehold)
+        assertFalse(state.isSubmitting)
+    }
+
+    @Test
+    fun `sign-up cannot submit while displayName is blank`() = runTest {
+        vm.switchMode(AuthUiState.Mode.EmailSignUp)
+        vm.onEmailChange("a@b.com")
+        vm.onPasswordChange("secret123")
+        // displayName never set — still blank
+        assertFalse(vm.uiState.value.canSubmit)
+    }
+
+    @Test
+    fun `EmailAlreadyInUse sets toastMessage`() = runTest {
+        coEvery { repo.signUpWithEmail(any(), any(), any()) } returns
+            Result.failure(AuthError.EmailAlreadyInUse)
+
+        vm.switchMode(AuthUiState.Mode.EmailSignUp)
+        vm.onDisplayNameChange("Alice")
+        vm.onEmailChange("a@b.com")
+        vm.onPasswordChange("secret123")
+        vm.submit()
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        assertEquals("That email is already registered", state.toastMessage)
+        assertFalse(state.isSubmitting)
+    }
 }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.OutlinedTextField
@@ -26,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.MaterialTheme
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
@@ -52,7 +54,7 @@ fun AuthScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text("Pantry", style = androidx.compose.material3.MaterialTheme.typography.headlineLarge)
+            Text("Pantry", style = MaterialTheme.typography.headlineLarge)
             Spacer(Modifier.height(24.dp))
             when (state.mode) {
                 AuthUiState.Mode.Welcome -> WelcomeButtons(
@@ -117,7 +119,7 @@ private fun EmailForm(state: AuthUiState, viewModel: AuthViewModel) {
         enabled = state.canSubmit && !state.isSubmitting,
         modifier = Modifier.fillMaxWidth().testTag("submit"),
     ) {
-        if (state.isSubmitting) CircularProgressIndicator(modifier = Modifier.height(20.dp))
+        if (state.isSubmitting) CircularProgressIndicator(modifier = Modifier.size(20.dp))
         else Text(if (state.mode == AuthUiState.Mode.EmailSignIn) "Sign in" else "Create account")
     }
     Spacer(Modifier.height(8.dp))
