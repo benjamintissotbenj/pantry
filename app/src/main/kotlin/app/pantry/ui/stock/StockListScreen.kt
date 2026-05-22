@@ -13,13 +13,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -69,16 +72,23 @@ fun StockListScreen(
             ) { Icon(Icons.Filled.Add, contentDescription = "Add item") }
         },
     ) { padding ->
-        Box(Modifier.fillMaxSize().padding(padding)) {
-            when {
-                state.isLoading -> LoadingRows()
-                state.visibleItems.isEmpty() -> EmptyState()
-                else -> ItemList(
-                    items = state.visibleItems,
-                    onRowClick = onRowClick,
-                    onIncrement = viewModel::onIncrement,
-                    onDecrement = viewModel::onDecrement,
-                )
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            SearchField(
+                query = state.searchQuery,
+                onChange = viewModel::onSearchChange,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+            Box(Modifier.fillMaxSize()) {
+                when {
+                    state.isLoading -> LoadingRows()
+                    state.visibleItems.isEmpty() -> EmptyState()
+                    else -> ItemList(
+                        items = state.visibleItems,
+                        onRowClick = onRowClick,
+                        onIncrement = viewModel::onIncrement,
+                        onDecrement = viewModel::onDecrement,
+                    )
+                }
             }
         }
     }
@@ -90,6 +100,25 @@ fun StockListScreen(
             onDismiss = { sheetOpen = false },
         )
     }
+}
+
+@Composable
+private fun SearchField(query: String, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onChange,
+        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                IconButton(onClick = { onChange("") }) {
+                    Icon(Icons.Filled.Clear, contentDescription = "Clear search")
+                }
+            }
+        },
+        placeholder = { Text("Search items") },
+        singleLine = true,
+        modifier = modifier.testTag("stock_search"),
+    )
 }
 
 @Composable
