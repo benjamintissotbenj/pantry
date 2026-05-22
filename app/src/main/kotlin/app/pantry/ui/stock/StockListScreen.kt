@@ -37,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -198,33 +199,49 @@ private fun StockRow(
     onPlus: () -> Unit,
     onMinus: () -> Unit,
 ) {
+    val isOutOfStock = item.quantity == 0.0
+    val rowAlpha = if (isOutOfStock) 0.5f else 1f
+    val isLowAndNotZero = item.isLowStock && !isOutOfStock
+    val qtyColor = if (isLowAndNotZero) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+    val qtyStyle = if (isOutOfStock)
+        MaterialTheme.typography.bodyLarge.copy(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+    else MaterialTheme.typography.bodyLarge
+
     Row(
         Modifier
             .fillMaxWidth()
+            .alpha(rowAlpha)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             item.name,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier
-                .weight(1f)
-                .clickable { onClick() }
-                .testTag("stock_row_${item.id}"),
+            style = qtyStyle,
+            modifier = Modifier.weight(1f).clickable { onClick() }.testTag("stock_row_${item.id}"),
         )
         IconButton(
             onClick = onMinus,
             enabled = item.quantity > 0.0,
             modifier = Modifier.testTag("stock_minus_${item.id}"),
         ) { Icon(Icons.Filled.Remove, contentDescription = "Decrease") }
-        Text(
-            buildString {
-                append(formatQuantity(item.quantity))
-                if (item.unit.displaySuffix.isNotEmpty()) { append(' '); append(item.unit.displaySuffix) }
-            },
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(horizontal = 8.dp),
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (isLowAndNotZero) {
+                Text(
+                    "⚠ ",
+                    color = qtyColor,
+                    modifier = Modifier.testTag("low_stock_badge_${item.id}"),
+                )
+            }
+            Text(
+                buildString {
+                    append(formatQuantity(item.quantity))
+                    if (item.unit.displaySuffix.isNotEmpty()) { append(' '); append(item.unit.displaySuffix) }
+                },
+                style = qtyStyle,
+                color = qtyColor,
+                modifier = Modifier.padding(horizontal = 8.dp),
+            )
+        }
         IconButton(
             onClick = onPlus,
             modifier = Modifier.testTag("stock_plus_${item.id}"),
