@@ -66,6 +66,20 @@ class FirebaseAuthRepositoryTest {
         assertInstanceOf(AuthError.InvalidCredentials::class.java, result.exceptionOrNull())
     }
 
+    @Test
+    fun `signInWithEmail maps ERROR_INVALID_EMAIL to InvalidEmail`() = runTest {
+        val invalidEmailException = mockk<FirebaseAuthInvalidCredentialsException>(relaxed = true) {
+            every { errorCode } returns "ERROR_INVALID_EMAIL"
+        }
+        every { firebaseAuth.signInWithEmailAndPassword(any(), any()) } returns
+            Tasks.forException(invalidEmailException)
+
+        val result = repo.signInWithEmail("not-an-email", "whatever")
+
+        assertTrue(result.isFailure)
+        assertInstanceOf(AuthError.InvalidEmail::class.java, result.exceptionOrNull())
+    }
+
     // ── signUpWithEmail ──────────────────────────────────────────────────────
 
     @Test

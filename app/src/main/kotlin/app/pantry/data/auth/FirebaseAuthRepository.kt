@@ -79,10 +79,12 @@ open class FirebaseAuthRepository @Inject constructor(
         }
 
     private fun mapAuthError(t: Throwable): AuthError = when (t) {
-        is FirebaseAuthWeakPasswordException -> AuthError.WeakPassword
-        is FirebaseAuthUserCollisionException -> AuthError.EmailAlreadyInUse
-        is FirebaseAuthInvalidCredentialsException -> AuthError.InvalidCredentials
+        is FirebaseAuthWeakPasswordException -> AuthError.WeakPassword  // must precede InvalidCredentials (subtype)
+        is FirebaseAuthInvalidCredentialsException ->
+            if (t.errorCode == "ERROR_INVALID_EMAIL") AuthError.InvalidEmail
+            else AuthError.InvalidCredentials
         is FirebaseAuthInvalidUserException -> AuthError.InvalidCredentials
+        is FirebaseAuthUserCollisionException -> AuthError.EmailAlreadyInUse
         is IOException -> AuthError.NoNetwork
         else -> AuthError.Unknown(rootCause = t)
     }
