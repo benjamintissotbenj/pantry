@@ -1,0 +1,24 @@
+# Default: treat files as text and normalise to LF on commit.
+* text=auto eol=lf
+
+# Windows-only scripts must keep CRLF or they won't run.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Treat these as binary (no line-ending conversion, no diff).
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.webp   binary
+*.ico    binary
+*.svg    text
+*.pdf    binary
+*.jar    binary
+*.keystore binary
+*.jks    binary
+*.so     binary
+*.aar    binary
+*.apk    binary
+*.zip    binary
+*.gz     binary
