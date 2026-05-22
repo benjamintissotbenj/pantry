@@ -1,4 +1,4 @@
-package app.pantry.ui.home
+package app.pantry.ui.settings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,29 +13,41 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
-fun HomePlaceholderScreen(
+fun SettingsScreen(
     onSignedOut: () -> Unit,
-    viewModel: HomeViewModel = hiltViewModel(),
+    viewModel: SettingsViewModel = hiltViewModel(),
 ) {
+    val state by viewModel.uiState.collectAsState()
     val signedOut by viewModel.signedOut.collectAsState()
+
     LaunchedEffect(signedOut) { if (signedOut) onSignedOut() }
 
     Column(
         Modifier.fillMaxSize().padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text("Coming next: stock catalog", style = MaterialTheme.typography.titleLarge)
+        Text("Settings", style = MaterialTheme.typography.headlineSmall)
+        Spacer(Modifier.height(16.dp))
+        Text("Household", style = MaterialTheme.typography.labelLarge)
+        Text(state.householdName, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.testTag("household_name"))
+        Spacer(Modifier.height(8.dp))
+        Text("Invite code", style = MaterialTheme.typography.labelLarge)
+        Text(
+            state.inviteCode,
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.testTag("invite_code"),
+        )
         Spacer(Modifier.height(24.dp))
-        Button(onClick = viewModel::signOut, modifier = Modifier.testTag("signout")) {
-            Text("Sign out")
-        }
+        Button(
+            onClick = viewModel::signOut,
+            modifier = Modifier.testTag("settings_signout"),
+        ) { Text("Sign out") }
     }
 }

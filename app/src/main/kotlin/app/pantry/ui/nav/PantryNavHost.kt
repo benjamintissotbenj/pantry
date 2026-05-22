@@ -6,7 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import app.pantry.ui.auth.AuthScreen
-import app.pantry.ui.home.HomePlaceholderScreen
+import app.pantry.ui.home.HomeShell
 import app.pantry.ui.household.HouseholdOnboardingScreen
 
 @Composable
@@ -37,7 +37,7 @@ fun PantryNavHost(
             )
         }
         composable(PantryRoute.Home.path) {
-            HomePlaceholderScreen(
+            HomeShell(
                 onSignedOut = {
                     navController.navigate(PantryRoute.Auth.path) {
                         popUpTo(0) { inclusive = true }
