@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,10 +13,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -70,7 +73,12 @@ fun StockListScreen(
             when {
                 state.isLoading -> LoadingRows()
                 state.visibleItems.isEmpty() -> EmptyState()
-                else -> ItemList(state.visibleItems, onClick = onRowClick)
+                else -> ItemList(
+                    items = state.visibleItems,
+                    onRowClick = onRowClick,
+                    onIncrement = viewModel::onIncrement,
+                    onDecrement = viewModel::onDecrement,
+                )
             }
         }
     }
@@ -103,35 +111,58 @@ private fun EmptyState() {
 }
 
 @Composable
-private fun ItemList(items: List<StockItem>, onClick: (StockItem) -> Unit) {
+private fun ItemList(
+    items: List<StockItem>,
+    onRowClick: (StockItem) -> Unit,
+    onIncrement: (StockItem) -> Unit,
+    onDecrement: (StockItem) -> Unit,
+) {
     LazyColumn(Modifier.fillMaxSize().testTag("stock_list")) {
         items(items, key = { it.id }) { item ->
-            StockRow(item, onClick = { onClick(item) })
+            StockRow(item, onClick = { onRowClick(item) }, onPlus = { onIncrement(item) }, onMinus = { onDecrement(item) })
             HorizontalDivider()
         }
     }
 }
 
 @Composable
-private fun StockRow(item: StockItem, onClick: () -> Unit) {
-    Box(
+private fun StockRow(
+    item: StockItem,
+    onClick: () -> Unit,
+    onPlus: () -> Unit,
+    onMinus: () -> Unit,
+) {
+    Row(
         Modifier
-            .testTag("stock_row_${item.id}")
             .fillMaxWidth()
-            .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        val qtyText = buildString {
-            append(formatQuantity(item.quantity))
-            if (item.unit.displaySuffix.isNotEmpty()) {
-                append(' ')
-                append(item.unit.displaySuffix)
-            }
-        }
         Text(
-            "${item.name} · $qtyText",
+            item.name,
             style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier
+                .weight(1f)
+                .clickable { onClick() }
+                .testTag("stock_row_${item.id}"),
         )
+        IconButton(
+            onClick = onMinus,
+            enabled = item.quantity > 0.0,
+            modifier = Modifier.testTag("stock_minus_${item.id}"),
+        ) { Icon(Icons.Filled.Remove, contentDescription = "Decrease") }
+        Text(
+            buildString {
+                append(formatQuantity(item.quantity))
+                if (item.unit.displaySuffix.isNotEmpty()) { append(' '); append(item.unit.displaySuffix) }
+            },
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(horizontal = 8.dp),
+        )
+        IconButton(
+            onClick = onPlus,
+            modifier = Modifier.testTag("stock_plus_${item.id}"),
+        ) { Icon(Icons.Filled.Add, contentDescription = "Increase") }
     }
 }
 
