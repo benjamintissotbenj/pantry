@@ -8,6 +8,7 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.junit.Assert.assertFalse
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,5 +37,24 @@ class HomePlaceholderScreenTest {
         }
         composeRule.onNodeWithTag("signout").performClick()
         composeRule.waitUntil(2_000) { signedOut }
+    }
+
+    @Test
+    fun sign_out_failure_does_not_navigate() {
+        val repo: AuthRepository = mockk(relaxed = true) {
+            every { currentUser } returns MutableStateFlow(null)
+        }
+        coEvery { repo.signOut() } returns Result.failure(RuntimeException("network error"))
+
+        var signedOut = false
+        composeRule.setContent {
+            HomePlaceholderScreen(
+                onSignedOut = { signedOut = true },
+                viewModel = HomeViewModel(repo),
+            )
+        }
+        composeRule.onNodeWithTag("signout").performClick()
+        composeRule.mainClock.advanceTimeBy(500)
+        assertFalse(signedOut)
     }
 }

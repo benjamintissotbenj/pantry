@@ -19,8 +19,11 @@ class HomeViewModel @Inject constructor(
 
     fun signOut() {
         viewModelScope.launch {
-            auth.signOut()
-            _signedOut.value = true
+            val result = auth.signOut()
+            if (result.isSuccess) {
+                _signedOut.value = true
+            }
+            // Phase 4: surface result.exceptionOrNull() via a snackbar / error state
         }
     }
 }
