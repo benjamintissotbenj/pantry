@@ -33,9 +33,15 @@ class StockListScreenTest {
         return StockListViewModel(ch, stock)
     }
 
+    private fun makeSheetVm(): AddEditItemViewModel {
+        val ch: CurrentHouseholdRepository = mockk { every { currentHouseholdId } returns MutableStateFlow("h-1") }
+        val stock: StockItemRepository = mockk(relaxed = true)
+        return AddEditItemViewModel(ch, stock)
+    }
+
     @Test
     fun shows_empty_state_when_no_items() {
-        composeRule.setContent { StockListScreen(viewModel = makeVm(emptyList())) }
+        composeRule.setContent { StockListScreen(viewModel = makeVm(emptyList()), sheetViewModel = makeSheetVm()) }
         composeRule.onNodeWithText("No items yet — tap + to add one").assertIsDisplayed()
     }
 
@@ -44,7 +50,7 @@ class StockListScreenTest {
         val items = listOf(
             StockItem("i-1", "Milk", "Fridge", StockUnit.LITER, 1.5, 1.0, now),
         )
-        composeRule.setContent { StockListScreen(viewModel = makeVm(items)) }
+        composeRule.setContent { StockListScreen(viewModel = makeVm(items), sheetViewModel = makeSheetVm()) }
         composeRule.onNodeWithTag("stock_row_i-1").assertIsDisplayed()
     }
 }

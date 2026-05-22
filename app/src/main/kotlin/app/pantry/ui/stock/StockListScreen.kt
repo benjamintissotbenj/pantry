@@ -22,6 +22,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -33,14 +36,19 @@ import app.pantry.domain.model.StockItem
 @Composable
 fun StockListScreen(
     viewModel: StockListViewModel = hiltViewModel(),
+    sheetViewModel: AddEditItemViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
+    var sheetOpen by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Stock") }) },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* wired in US-8 */ },
+                onClick = {
+                    sheetViewModel.beginAdd(prefillCategory = state.selectedCategory.orEmpty())
+                    sheetOpen = true
+                },
                 modifier = Modifier.testTag("stock_fab"),
             ) { Icon(Icons.Filled.Add, contentDescription = "Add item") }
         },
@@ -52,6 +60,14 @@ fun StockListScreen(
                 else -> ItemList(state.visibleItems)
             }
         }
+    }
+
+    if (sheetOpen) {
+        AddEditItemBottomSheet(
+            viewModel = sheetViewModel,
+            existingCategories = state.categories,
+            onDismiss = { sheetOpen = false },
+        )
     }
 }
 
