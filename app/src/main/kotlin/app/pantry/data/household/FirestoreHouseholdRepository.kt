@@ -4,6 +4,7 @@ import app.pantry.domain.model.Household
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.channels.awaitClose
@@ -19,14 +20,18 @@ class FirestoreHouseholdRepository @Inject constructor(
 
     override fun observe(householdId: String): Flow<Household?> = callbackFlow {
         val reg = firestore.collection("households").document(householdId)
-            .addSnapshotListener { snap, _ -> trySend(snap?.toHousehold()) }
+            .addSnapshotListener { snap, error ->
+                if (error != null) { close(error); return@addSnapshotListener }
+                trySend(snap?.toHousehold())
+            }
         awaitClose { reg.remove() }
     }
 
     override fun observeUserHouseholds(uid: String): Flow<List<Household>> = callbackFlow {
         val reg = firestore.collection("households")
             .whereArrayContains("memberUids", uid)
-            .addSnapshotListener { qs, _ ->
+            .addSnapshotListener { qs, error ->
+                if (error != null) { close(error); return@addSnapshotListener }
                 trySend(qs?.documents.orEmpty().mapNotNull { it.toHousehold() })
             }
         awaitClose { reg.remove() }
@@ -44,7 +49,11 @@ class FirestoreHouseholdRepository @Inject constructor(
         )
         firestore.runBatch { batch ->
             batch.set(doc, data)
-            batch.update(firestore.collection("users").document(ownerUid), "households", FieldValue.arrayUnion(doc.id))
+            batch.set(
+                firestore.collection("users").document(ownerUid),
+                mapOf("households" to FieldValue.arrayUnion(doc.id)),
+                SetOptions.merge(),
+            )
         }.await()
         Household(id = doc.id, name = name, memberUids = listOf(ownerUid), inviteCode = code)
     }
