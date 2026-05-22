@@ -43,3 +43,15 @@ object FunctionsModule {
     @Provides @Singleton fun provideFunctions(): FirebaseFunctions =
         FirebaseFunctions.getInstance("europe-west1")
 }
+
+@Module
+@InstallIn(SingletonComponent::class)
+object AppScopeModule {
+    @Provides
+    @Singleton
+    fun provideAppScope(): kotlinx.coroutines.CoroutineScope =
+        kotlinx.coroutines.CoroutineScope(
+            kotlinx.coroutines.SupervisorJob() +
+                kotlinx.coroutines.Dispatchers.Default,
+        )
+}
