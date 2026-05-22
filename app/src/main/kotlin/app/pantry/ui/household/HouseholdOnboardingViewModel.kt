@@ -65,10 +65,10 @@ class HouseholdOnboardingViewModel @Inject constructor(
                 onFailure = { e ->
                     _state.update {
                         when (e) {
-                            JoinHouseholdError.NotFound -> it.copy(isSubmitting = false, inviteError = "No household found for that code.")
-                            JoinHouseholdError.AlreadyMember -> it.copy(isSubmitting = false, inviteError = "You're already in this household.")
-                            JoinHouseholdError.NoNetwork -> it.copy(isSubmitting = false, toast = "No internet connection")
-                            else -> it.copy(isSubmitting = false, toast = e.message ?: "Failed to join household")
+                            JoinHouseholdError.NotFound,
+                            JoinHouseholdError.AlreadyMember -> it.copy(isSubmitting = false, inviteError = e.message)
+                            JoinHouseholdError.NoNetwork     -> it.copy(isSubmitting = false, toast = e.message)
+                            else                             -> it.copy(isSubmitting = false, toast = e.message ?: "Failed to join household")
                         }
                     }
                 },

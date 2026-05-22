@@ -5,6 +5,7 @@ import com.google.firebase.functions.FirebaseFunctionsException
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.tasks.await
 
 @Singleton
@@ -30,6 +31,7 @@ class FirebaseJoinHouseholdGateway @Inject constructor(
     } catch (e: IOException) {
         Result.failure(JoinHouseholdError.NoNetwork)
     } catch (e: Throwable) {
+        if (e is CancellationException) throw e
         Result.failure(JoinHouseholdError.Unknown(e))
     }
 }
