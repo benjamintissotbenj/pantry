@@ -1,5 +1,4 @@
 <resources>
     <string name="app_name">Pantry</string>
-    <!-- Replace with the real Web Client ID from Firebase Console → Project Settings → General → Your apps → Web client ID -->
-    <string name="default_web_client_id" translatable="false">REPLACE_WITH_WEB_CLIENT_ID</string>
+    <string name="default_web_client_id" translatable="false">59220759111-e8js1kc6mo5u8p3vltvpkql8kp099k6h.apps.googleusercontent.com</string>
 </resources>
