@@ -2,7 +2,6 @@ package app.pantry.data.stock
 
 import app.pantry.domain.model.StockItem
 import app.pantry.domain.model.StockUnit
-import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -59,6 +58,8 @@ class FirestoreStockItemRepository @Inject constructor(
         )
     }
 
+    // NOTE: writes quantity as a plain value. Do not call while adjustQuantity() is in-flight
+    // for the same item — last-write-wins, the atomic increment would be lost.
     override suspend fun update(
         householdId: String,
         itemId: String,
@@ -102,7 +103,9 @@ class FirestoreStockItemRepository @Inject constructor(
         val unit = StockUnit.fromStorageKey(getString("unit"))
         val quantity = getDouble("quantity") ?: 0.0
         val threshold = getDouble("threshold") ?: 1.0
-        val ts = getTimestamp("updatedAt") ?: Timestamp.now()
+        val updatedAt = getTimestamp("updatedAt")
+            ?.let { Instant.ofEpochSecond(it.seconds, it.nanoseconds.toLong()) }
+            ?: Instant.EPOCH
         return StockItem(
             id = id,
             name = name,
@@ -110,7 +113,7 @@ class FirestoreStockItemRepository @Inject constructor(
             unit = unit,
             quantity = quantity,
             threshold = threshold,
-            updatedAt = Instant.ofEpochSecond(ts.seconds, ts.nanoseconds.toLong()),
+            updatedAt = updatedAt,
         )
     }
 }

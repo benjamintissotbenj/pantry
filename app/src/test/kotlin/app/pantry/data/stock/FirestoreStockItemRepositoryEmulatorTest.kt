@@ -71,13 +71,13 @@ class FirestoreStockItemRepositoryEmulatorTest {
             assertEquals("Milk", items.first { it.id == itemId }.name)
 
             // Increment by +1
-            repo.adjustQuantity(householdId, itemId, 1.0)
+            repo.adjustQuantity(householdId, itemId, 1.0).getOrThrow()
             var updated = awaitItem()
             while (updated.first { it.id == itemId }.quantity < 2.0) updated = awaitItem()
             assertEquals(2.0, updated.first { it.id == itemId }.quantity, 0.001)
 
             // Delete
-            repo.delete(householdId, itemId)
+            repo.delete(householdId, itemId).getOrThrow()
             var afterDelete = awaitItem()
             while (afterDelete.any { it.id == itemId }) afterDelete = awaitItem()
             cancelAndIgnoreRemainingEvents()

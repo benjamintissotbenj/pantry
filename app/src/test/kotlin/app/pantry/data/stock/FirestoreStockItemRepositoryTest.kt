@@ -3,6 +3,7 @@ package app.pantry.data.stock
 import app.pantry.domain.model.StockUnit
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import io.mockk.every
@@ -37,7 +38,8 @@ class FirestoreStockItemRepositoryTest {
     @Test
     fun `create writes item doc and returns StockItem`() = runTest {
         val (firestore, _, itemDoc) = mockChain()
-        every { itemDoc.set(any()) } returns Tasks.forResult(null)
+        val dataSlot = slot<Map<String, Any>>()
+        every { itemDoc.set(capture(dataSlot)) } returns Tasks.forResult(null)
         val repo = FirestoreStockItemRepository(firestore)
 
         val result = repo.create(
@@ -54,7 +56,11 @@ class FirestoreStockItemRepositoryTest {
         assertEquals("Milk", item.name)
         assertEquals(StockUnit.LITER, item.unit)
         assertEquals(1.5, item.quantity)
-        verify { itemDoc.set(any()) }
+        assertEquals("Milk", dataSlot.captured["name"])
+        assertEquals("L", dataSlot.captured["unit"])
+        assertEquals(1.5, dataSlot.captured["quantity"])
+        assertEquals(1.0, dataSlot.captured["threshold"])
+        assertTrue(dataSlot.captured["updatedAt"] is FieldValue)
     }
 
     @Test
@@ -102,8 +108,7 @@ class FirestoreStockItemRepositoryTest {
         val result = repo.adjustQuantity("h-1", "i-1", delta = -1.0)
 
         assertTrue(result.isSuccess)
-        // FieldValue.increment is a sentinel; verify the key exists with a non-null value
-        assertTrue(dataSlot.captured.containsKey("quantity"))
-        assertTrue(dataSlot.captured["quantity"] != null)
+        assertTrue(dataSlot.captured["quantity"] is FieldValue)
+        assertTrue(dataSlot.captured["updatedAt"] is FieldValue)
     }
 }
