@@ -77,16 +77,24 @@ fun AddEditItemBottomSheet(
                 modifier = Modifier.fillMaxWidth().testTag("field_name"),
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 OutlinedTextField(
                     value = state.quantity,
                     onValueChange = viewModel::onQuantityChange,
                     label = { Text("Quantity") },
+                    placeholder = { Text("0") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.weight(1f).testTag("field_quantity"),
+                    modifier = Modifier.weight(2f).testTag("field_quantity"),
                 )
-                UnitDropdown(state.unit, viewModel::onUnitChange)
+                UnitDropdown(
+                    selected = state.unit,
+                    onSelect = viewModel::onUnitChange,
+                    modifier = Modifier.weight(1f),
+                )
             }
 
             OutlinedTextField(
@@ -159,9 +167,17 @@ fun AddEditItemBottomSheet(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun UnitDropdown(selected: StockUnit, onSelect: (StockUnit) -> Unit) {
+private fun UnitDropdown(
+    selected: StockUnit,
+    onSelect: (StockUnit) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     var expanded by remember { mutableStateOf(false) }
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = it },
+        modifier = modifier,
+    ) {
         OutlinedTextField(
             readOnly = true,
             value = selected.storageKey.ifEmpty { "count" },
@@ -170,6 +186,7 @@ private fun UnitDropdown(selected: StockUnit, onSelect: (StockUnit) -> Unit) {
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier
                 .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                .fillMaxWidth()
                 .testTag("field_unit"),
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {

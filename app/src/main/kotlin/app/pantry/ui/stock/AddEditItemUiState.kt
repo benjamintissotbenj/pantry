@@ -6,7 +6,7 @@ data class AddEditItemUiState(
     val mode: Mode = Mode.Add,
     val itemId: String? = null,
     val name: String = "",
-    val quantity: String = "0",         // string-backed so we can render input as-typed
+    val quantity: String = "",          // empty by default; UI shows "0" as placeholder hint
     val unit: StockUnit = StockUnit.COUNT,
     val threshold: String = "1",
     val category: String = "",
@@ -19,6 +19,6 @@ data class AddEditItemUiState(
     val canSubmit: Boolean
         get() = !isSubmitting
             && name.isNotBlank()
-            && quantity.toDoubleOrNull() != null
-            && threshold.toDoubleOrNull() != null
+            && (quantity.isBlank() || quantity.toDoubleOrNull() != null)
+            && (threshold.isBlank() || threshold.toDoubleOrNull() != null)
 }
