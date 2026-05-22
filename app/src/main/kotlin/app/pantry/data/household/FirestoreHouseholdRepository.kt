@@ -37,8 +37,13 @@ class FirestoreHouseholdRepository @Inject constructor(
         awaitClose { reg.remove() }
     }
 
+    // Note: invite codes are NOT collision-checked client-side. The Firestore read rule
+    // restricts households to members, so a global "where inviteCode == X" query is denied
+    // for non-members. With 36^6 ≈ 2.2B possible codes, accidental collisions for a
+    // personal-scale app are vanishingly rare; if uniqueness ever matters strictly, add
+    // a Cloud Function that runs the check with admin privileges.
     override suspend fun create(name: String, ownerUid: String): Result<Household> = runCatching {
-        val code = uniqueCode()
+        val code = codes.next()
         val doc = firestore.collection("households").document()
         val data = mapOf(
             "name" to name,
@@ -63,18 +68,9 @@ class FirestoreHouseholdRepository @Inject constructor(
     }
 
     override suspend fun regenerateInviteCode(householdId: String): Result<String> = runCatching {
-        val code = uniqueCode()
+        val code = codes.next()
         firestore.collection("households").document(householdId).update("inviteCode", code).await()
         code
-    }
-
-    private suspend fun uniqueCode(): String {
-        repeat(MAX_ATTEMPTS) {
-            val candidate = codes.next()
-            val q = firestore.collection("households").whereEqualTo("inviteCode", candidate).limit(1).get().await()
-            if (q.isEmpty) return candidate
-        }
-        error("Could not allocate a unique invite code after $MAX_ATTEMPTS attempts")
     }
 
     private fun DocumentSnapshot.toHousehold(): Household? {
@@ -89,5 +85,4 @@ class FirestoreHouseholdRepository @Inject constructor(
         )
     }
 
-    companion object { private const val MAX_ATTEMPTS = 5 }
 }

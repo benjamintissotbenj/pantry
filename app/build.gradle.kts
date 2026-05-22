@@ -24,6 +24,13 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Opt-in via `-PuseFirebaseEmulator=true`. Default is false so installed debug
+        // builds connect to real Firebase (works on phones, emulator-host loopback would
+        // only resolve from an Android emulator anyway).
+        val useFirebaseEmulator = providers.gradleProperty("useFirebaseEmulator")
+            .orElse("false").get()
+        buildConfigField("boolean", "USE_FIREBASE_EMULATOR", useFirebaseEmulator)
     }
 
     buildTypes {

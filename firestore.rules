@@ -7,19 +7,23 @@ service cloud.firestore {
     }
 
     match /households/{hid} {
-      allow read: if isMember(hid);
-      allow update, delete: if isMember(hid);
+      // Direct doc/query access: rule must read resource.data (not get()) so
+      // Firestore can evaluate it against the array-contains query filter.
+      allow read: if request.auth != null
+        && request.auth.uid in resource.data.memberUids;
+      allow update, delete: if request.auth != null
+        && request.auth.uid in resource.data.memberUids;
       allow create: if request.auth != null
         && request.resource.data.memberUids.size() == 1
         && request.resource.data.memberUids[0] == request.auth.uid;
 
+      // Subcollections need get() because resource here is the subdoc,
+      // not the parent household — we have to fetch the parent's memberUids.
       match /{subcollection}/{doc} {
-        allow read, write: if isMember(hid);
+        allow read, write: if request.auth != null
+          && request.auth.uid in
+            get(/databases/$(database)/documents/households/$(hid)).data.memberUids;
       }
-    }
-
-    function isMember(hid) {
-      return request.auth.uid in get(/databases/$(database)/documents/households/$(hid)).data.memberUids;
     }
   }
 }
