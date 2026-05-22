@@ -108,7 +108,7 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.compose.ui.test.junit4)
     debugImplementation(libs.compose.ui.test.manifest)
-    testImplementation("junit:junit:4.13.2")
+    testImplementation(libs.junit4)
     testImplementation(libs.androidx.test.ext.junit)
 
     androidTestImplementation(libs.androidx.test.ext.junit)

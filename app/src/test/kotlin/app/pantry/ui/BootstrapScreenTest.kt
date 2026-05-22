@@ -4,6 +4,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import app.pantry.BootstrapScreenForTest
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -19,7 +20,7 @@ class BootstrapScreenTest {
 
     @Test
     fun shows_placeholder_text() {
-        composeRule.setContent { MaterialTheme { app.pantry.BootstrapScreenForTest() } }
+        composeRule.setContent { MaterialTheme { BootstrapScreenForTest() } }
         composeRule.onNodeWithText("Pantry — bootstrap OK").assertIsDisplayed()
     }
 }

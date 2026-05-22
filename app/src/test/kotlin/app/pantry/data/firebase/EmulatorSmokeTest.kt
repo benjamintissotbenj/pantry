@@ -11,6 +11,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.Assert.assertEquals
+import org.junit.jupiter.api.Tag
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
@@ -21,9 +22,11 @@ import org.robolectric.annotation.Config
  * `includeEmulatorTests` system property to be set by the build script.
  *
  * Runner: Robolectric (JUnit 4) — required to supply an Android Context for FirebaseApp.initializeApp.
- * The `@Tag("emulator")` annotation on the companion object is informational; exclusion of this
- * test in normal CI is done via the system-property guard in @Before.
+ * The class is tagged @Tag("emulator") so the JUnit Platform's excludeTags filter can skip it
+ * without instantiating the test class; the @Before assumeTrue guard is a belt-and-braces fallback
+ * for runners that don't honor the tag.
  */
+@Tag("emulator")
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class EmulatorSmokeTest {
@@ -45,7 +48,10 @@ class EmulatorSmokeTest {
                     .build(),
             )
         }
-        FirebaseFirestore.getInstance().useEmulator("localhost", 8080)
+        if (!emulatorConfigured) {
+            FirebaseFirestore.getInstance().useEmulator("localhost", 8080)
+            emulatorConfigured = true
+        }
     }
 
     @Test
@@ -55,5 +61,9 @@ class EmulatorSmokeTest {
         docRef.set(mapOf("ok" to true)).await()
         val snap = docRef.get().await()
         assertEquals(true, snap.getBoolean("ok"))
+    }
+
+    companion object {
+        private var emulatorConfigured = false
     }
 }
