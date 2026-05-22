@@ -52,12 +52,20 @@ android {
 
     testOptions {
         unitTests.isIncludeAndroidResources = true
-        unitTests.all { it.useJUnitPlatform() }
+        val includeEmulator = providers.gradleProperty("includeEmulatorTests").isPresent
+        unitTests.all { test ->
+            test.useJUnitPlatform {
+                if (!includeEmulator) excludeTags = setOf("emulator")
+            }
+            if (includeEmulator) {
+                test.systemProperty("includeEmulatorTests", "true")
+            }
+        }
     }
 
     sourceSets {
         getByName("main").kotlin.srcDir("src/main/kotlin")
-getByName("test").kotlin.srcDir("src/test/kotlin")
+        getByName("test").kotlin.srcDir("src/test/kotlin")
         getByName("androidTest").kotlin.srcDir("src/androidTest/kotlin")
     }
 }
@@ -93,12 +101,15 @@ dependencies {
     testImplementation(libs.junit.jupiter.api)
     testImplementation(libs.junit.jupiter.params)
     testRuntimeOnly(libs.junit.jupiter.engine)
+    testRuntimeOnly(libs.junit.vintage.engine)
     testImplementation(libs.turbine)
     testImplementation(libs.mockk)
     testImplementation(libs.coroutines.test)
     testImplementation(libs.robolectric)
     testImplementation(libs.compose.ui.test.junit4)
     debugImplementation(libs.compose.ui.test.manifest)
+    testImplementation("junit:junit:4.13.2")
+    testImplementation(libs.androidx.test.ext.junit)
 
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.mockk.android)

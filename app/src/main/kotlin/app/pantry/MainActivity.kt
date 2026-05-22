@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    BootstrapScreen()
+                    BootstrapScreenForTest()
                 }
             }
         }
@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun BootstrapScreen() {
+internal fun BootstrapScreenForTest() {
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Text("Pantry — bootstrap OK")
     }

@@ -20,6 +20,11 @@ pantry/
 4. `firebase emulators:start` — run Auth + Firestore + Functions locally
 5. `./gradlew test` — run unit + Robolectric tests
 
+## Testing
+
+- `./gradlew :app:test` — fast unit + Compose UI (Robolectric) tests
+- `firebase emulators:exec --only firestore,auth "./gradlew :app:test -PincludeEmulatorTests"` — full suite including emulator integration tests
+
 ## Spec
 
 See `spec/` for phase plans. Active phase: **Phase 1 — Bootstrap & Auth**.
