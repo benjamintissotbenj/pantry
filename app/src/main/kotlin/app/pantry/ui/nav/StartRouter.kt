@@ -26,15 +26,15 @@ import kotlinx.coroutines.flow.stateIn
 
 enum class StartRoute(val path: String) {
     Loading("loading"),
-    Auth("auth"),
-    Household("household"),
-    Home("home"),
+    Auth(PantryRoute.Auth.path),
+    Household(PantryRoute.Household.path),
+    Home(PantryRoute.Home.path),
 }
 
 @HiltViewModel
 class StartRouterViewModel @Inject constructor(
-    auth: AuthRepository,
-    households: HouseholdRepository,
+    private val auth: AuthRepository,
+    private val households: HouseholdRepository,
 ) : ViewModel() {
     @OptIn(ExperimentalCoroutinesApi::class)
     val initialRoute: StateFlow<StartRoute> = auth.currentUser
@@ -54,6 +54,8 @@ fun StartRouter(viewModel: StartRouterViewModel = hiltViewModel()) {
         StartRoute.Loading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
             CircularProgressIndicator()
         }
+        // startDestination is read once by NavHost. Mid-session transitions are driven
+        // by in-screen navController.navigate(...) calls, not by changes to `route` here.
         else -> PantryNavHost(
             navController = rememberNavController(),
             startDestination = route.path,
