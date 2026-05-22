@@ -23,7 +23,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
@@ -85,8 +88,25 @@ fun HouseholdOnboardingScreen(
                     ) { Text(if (state.isSubmitting) "Creating…" else "Create") }
                 }
                 HouseholdOnboardingUiState.Mode.Join -> {
-                    // implemented in US-11
-                    Text("Joining (placeholder)")
+                    OutlinedTextField(
+                        value = state.inviteCode,
+                        onValueChange = viewModel::onInviteCodeChange,
+                        label = { Text("Invite code") },
+                        isError = state.inviteError != null,
+                        supportingText = { state.inviteError?.let { Text(it) } },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth().testTag("join_code"),
+                        textStyle = TextStyle(
+                            fontFamily = FontFamily.Monospace,
+                            letterSpacing = 6.sp,
+                        ),
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Button(
+                        onClick = viewModel::submitJoin,
+                        enabled = state.canSubmitJoin,
+                        modifier = Modifier.fillMaxWidth().testTag("join_submit"),
+                    ) { Text(if (state.isSubmitting) "Joining…" else "Join") }
                 }
             }
         }

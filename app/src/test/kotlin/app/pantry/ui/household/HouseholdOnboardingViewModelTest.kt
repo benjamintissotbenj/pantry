@@ -2,6 +2,8 @@ package app.pantry.ui.household
 
 import app.pantry.data.auth.AuthRepository
 import app.pantry.data.household.HouseholdRepository
+import app.pantry.data.household.JoinHouseholdError
+import app.pantry.data.household.JoinHouseholdGateway
 import app.pantry.domain.model.Household
 import app.pantry.domain.model.UserProfile
 import io.mockk.coEvery
@@ -26,13 +28,14 @@ class HouseholdOnboardingViewModelTest {
 
     private val authRepo: AuthRepository = mockk(relaxed = true)
     private val householdRepo: HouseholdRepository = mockk(relaxed = true)
+    private val joinGateway: JoinHouseholdGateway = mockk(relaxed = true)
     private lateinit var vm: HouseholdOnboardingViewModel
 
     @BeforeEach
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
         every { authRepo.currentUser } returns MutableStateFlow(UserProfile("u-1", "Alice", "a@b.com"))
-        vm = HouseholdOnboardingViewModel(authRepo, householdRepo)
+        vm = HouseholdOnboardingViewModel(authRepo, householdRepo, joinGateway)
     }
 
     @AfterEach
@@ -59,5 +62,23 @@ class HouseholdOnboardingViewModelTest {
         assertFalse(s.isSubmitting)
         assertFalse(s.navigateToHome)
         assertEquals("Network error", s.toast)
+    }
+
+    @Test
+    fun `join flow navigates to home on success`() = runTest {
+        coEvery { joinGateway.joinByCode("ABCDEF") } returns Result.success("h-2")
+        vm.switchMode(HouseholdOnboardingUiState.Mode.Join)
+        vm.onInviteCodeChange("ABCDEF")
+        vm.submitJoin()
+        assertTrue(vm.uiState.value.navigateToHome)
+    }
+
+    @Test
+    fun `join with unknown code shows inline error`() = runTest {
+        coEvery { joinGateway.joinByCode("XXXXXX") } returns Result.failure(JoinHouseholdError.NotFound)
+        vm.switchMode(HouseholdOnboardingUiState.Mode.Join)
+        vm.onInviteCodeChange("XXXXXX")
+        vm.submitJoin()
+        assertEquals("No household found for that code.", vm.uiState.value.inviteError)
     }
 }

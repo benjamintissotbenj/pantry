@@ -10,6 +10,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import app.pantry.data.auth.AuthRepository
 import app.pantry.data.household.HouseholdRepository
+import app.pantry.data.household.JoinHouseholdGateway
 import app.pantry.domain.model.Household
 import app.pantry.domain.model.UserProfile
 import io.mockk.coEvery
@@ -32,6 +33,7 @@ class HouseholdOnboardingScreenTest {
     fun creates_household_and_navigates() {
         val authRepo: AuthRepository = mockk(relaxed = true)
         val householdRepo: HouseholdRepository = mockk(relaxed = true)
+        val joinGateway: JoinHouseholdGateway = mockk(relaxed = true)
         every { authRepo.currentUser } returns MutableStateFlow(UserProfile("u-1", "Alice", "a@b.com"))
         coEvery { householdRepo.create("Casa", "u-1") } returns Result.success(
             Household("h-1", "Casa", listOf("u-1"), "ABCDEF")
@@ -42,7 +44,7 @@ class HouseholdOnboardingScreenTest {
             HouseholdOnboardingScreen(
                 onCreated = { created = true },
                 onJoined = {},
-                viewModel = HouseholdOnboardingViewModel(authRepo, householdRepo),
+                viewModel = HouseholdOnboardingViewModel(authRepo, householdRepo, joinGateway),
             )
         }
         composeRule.onNodeWithText("Set up your household").assertIsDisplayed()

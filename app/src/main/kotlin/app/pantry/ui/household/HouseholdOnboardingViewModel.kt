@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.pantry.data.auth.AuthRepository
 import app.pantry.data.household.HouseholdRepository
+import app.pantry.data.household.JoinHouseholdError
+import app.pantry.data.household.JoinHouseholdGateway
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +18,7 @@ import kotlinx.coroutines.launch
 class HouseholdOnboardingViewModel @Inject constructor(
     private val auth: AuthRepository,
     private val households: HouseholdRepository,
+    private val joinGateway: JoinHouseholdGateway,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HouseholdOnboardingUiState())
@@ -53,7 +56,24 @@ class HouseholdOnboardingViewModel @Inject constructor(
     }
 
     fun submitJoin() {
-        // implemented in US-11
+        val s = _state.value
+        if (!s.canSubmitJoin) return
+        _state.update { it.copy(isSubmitting = true, inviteError = null, toast = null) }
+        viewModelScope.launch {
+            joinGateway.joinByCode(s.inviteCode).fold(
+                onSuccess = { _state.update { it.copy(isSubmitting = false, navigateToHome = true) } },
+                onFailure = { e ->
+                    _state.update {
+                        when (e) {
+                            JoinHouseholdError.NotFound -> it.copy(isSubmitting = false, inviteError = "No household found for that code.")
+                            JoinHouseholdError.AlreadyMember -> it.copy(isSubmitting = false, inviteError = "You're already in this household.")
+                            JoinHouseholdError.NoNetwork -> it.copy(isSubmitting = false, toast = "No internet connection")
+                            else -> it.copy(isSubmitting = false, toast = e.message ?: "Failed to join household")
+                        }
+                    }
+                },
+            )
+        }
     }
 
     fun consumeNavigation() = _state.update { it.copy(navigateToHome = false) }
