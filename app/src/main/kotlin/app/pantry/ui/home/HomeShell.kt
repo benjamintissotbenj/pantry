@@ -8,7 +8,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -19,11 +18,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import app.pantry.ui.settings.SettingsScreen
 import app.pantry.ui.shopping.ShoppingPlaceholderScreen
+import app.pantry.ui.stock.StockListScreen
 
 @Composable
 fun HomeShell(onSignedOut: () -> Unit) {
@@ -62,17 +61,10 @@ fun HomeShell(onSignedOut: () -> Unit) {
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
             when (tab) {
-                HomeTab.Stock -> StockTabPlaceholder()  // replaced by real Stock screen in US-7
+                HomeTab.Stock -> StockListScreen()
                 HomeTab.Shopping -> ShoppingPlaceholderScreen()
                 HomeTab.Settings -> SettingsScreen(onSignedOut = onSignedOut)
             }
         }
-    }
-}
-
-@Composable
-private fun StockTabPlaceholder() {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Stock — coming soon", style = MaterialTheme.typography.titleLarge)
     }
 }
