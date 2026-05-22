@@ -39,7 +39,6 @@ class SettingsViewModel @Inject constructor(
             SettingsUiState(
                 householdName = hh?.name.orEmpty(),
                 inviteCode = hh?.inviteCode.orEmpty(),
-                signedOut = _signedOut.value,
             )
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, SettingsUiState())

@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -15,8 +16,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import app.pantry.ui.settings.SettingsScreen
@@ -24,7 +27,11 @@ import app.pantry.ui.shopping.ShoppingPlaceholderScreen
 
 @Composable
 fun HomeShell(onSignedOut: () -> Unit) {
-    var tab by rememberSaveable { mutableStateOf(HomeTab.Default) }
+    val tabSaver = Saver<HomeTab, String>(
+        save = { it.name },
+        restore = { HomeTab.valueOf(it) },
+    )
+    var tab by rememberSaveable(stateSaver = tabSaver) { mutableStateOf(HomeTab.Default) }
 
     Scaffold(
         bottomBar = {
@@ -65,7 +72,7 @@ fun HomeShell(onSignedOut: () -> Unit) {
 
 @Composable
 private fun StockTabPlaceholder() {
-    Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-        Text("Stock — coming soon", style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text("Stock — coming soon", style = MaterialTheme.typography.titleLarge)
     }
 }
