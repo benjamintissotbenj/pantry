@@ -53,7 +53,7 @@ class FirestoreHouseholdRepositoryEmulatorTest {
             emulatorConfigured = true
         }
         firestore = FirebaseFirestore.getInstance()
-        repo = FirestoreHouseholdRepository(firestore, InviteCodeGenerator())
+        repo = FirestoreHouseholdRepository(firestore, InviteCodeGenerator(kotlin.random.Random.Default))
     }
 
     @Test

@@ -11,6 +11,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import app.pantry.ui.auth.AuthScreen
+import app.pantry.ui.household.HouseholdOnboardingScreen
 
 @Composable
 fun PantryNavHost(
@@ -32,7 +33,12 @@ fun PantryNavHost(
                 }
             }
         }
-        composable(PantryRoute.Household.path) { Centered("Household (placeholder)") }
+        composable(PantryRoute.Household.path) {
+            HouseholdOnboardingScreen(
+                onCreated = { navController.navigate(PantryRoute.Home.path) { popUpTo(PantryRoute.Household.path) { inclusive = true } } },
+                onJoined = { navController.navigate(PantryRoute.Home.path) { popUpTo(PantryRoute.Household.path) { inclusive = true } } },
+            )
+        }
         composable(PantryRoute.Home.path) { Centered("Home (placeholder)") }
     }
 }

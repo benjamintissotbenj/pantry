@@ -6,7 +6,7 @@ import kotlin.random.Random
 
 @Singleton
 class InviteCodeGenerator @Inject constructor(
-    private val random: Random = Random.Default,
+    private val random: Random,
 ) {
     private val alphabet = ('A'..'Z') + ('0'..'9')
 

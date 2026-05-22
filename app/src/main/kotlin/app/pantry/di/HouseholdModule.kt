@@ -11,6 +11,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import kotlin.random.Random
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -23,4 +24,5 @@ abstract class HouseholdBindings {
 @InstallIn(SingletonComponent::class)
 object HouseholdModule {
     @Provides @Singleton fun provideFirestore(): FirebaseFirestore = Firebase.firestore
+    @Provides @Singleton fun provideRandom(): Random = Random.Default
 }
