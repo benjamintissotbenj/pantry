@@ -1,16 +1,12 @@
 package app.pantry.ui.nav
 
 import androidx.annotation.VisibleForTesting
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import app.pantry.ui.auth.AuthScreen
+import app.pantry.ui.home.HomePlaceholderScreen
 import app.pantry.ui.household.HouseholdOnboardingScreen
 
 @Composable
@@ -39,11 +35,14 @@ fun PantryNavHost(
                 onJoined = { navController.navigate(PantryRoute.Home.path) { popUpTo(PantryRoute.Household.path) { inclusive = true } } },
             )
         }
-        composable(PantryRoute.Home.path) { Centered("Home (placeholder)") }
+        composable(PantryRoute.Home.path) {
+            HomePlaceholderScreen(
+                onSignedOut = {
+                    navController.navigate(PantryRoute.Auth.path) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
     }
-}
-
-@Composable
-private fun Centered(text: String) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(text) }
 }
