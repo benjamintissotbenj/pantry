@@ -41,5 +41,5 @@ abstract class JoinHouseholdBindings {
 @InstallIn(SingletonComponent::class)
 object FunctionsModule {
     @Provides @Singleton fun provideFunctions(): FirebaseFunctions =
-        FirebaseFunctions.getInstance()
+        FirebaseFunctions.getInstance("europe-west1")
 }

@@ -13,6 +13,6 @@ object EmulatorInitializer {
     fun initialise() {
         FirebaseAuth.getInstance().useEmulator(EMULATOR_HOST, AUTH_PORT)
         FirebaseFirestore.getInstance().useEmulator(EMULATOR_HOST, FIRESTORE_PORT)
-        FirebaseFunctions.getInstance().useEmulator(EMULATOR_HOST, FUNCTIONS_PORT)
+        FirebaseFunctions.getInstance("europe-west1").useEmulator(EMULATOR_HOST, FUNCTIONS_PORT)
     }
 }
