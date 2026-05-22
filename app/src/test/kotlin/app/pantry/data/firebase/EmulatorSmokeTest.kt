@@ -43,7 +43,7 @@ class EmulatorSmokeTest {
                 ctx,
                 FirebaseOptions.Builder()
                     .setApplicationId("1:000000000000:android:0000000000000000")
-                    .setProjectId("pantry-dev")
+                    .setProjectId("pantry-dev-1922e")
                     .setApiKey("fake-api-key")
                     .build(),
             )
