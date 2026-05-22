@@ -12,6 +12,7 @@ import app.pantry.ui.household.HouseholdOnboardingScreen
 @Composable
 fun PantryNavHost(
     navController: NavHostController,
+    startDestination: String = PantryRoute.Auth.path,
     /**
      * The auth screen composable. Defaults to the production [AuthScreen] using Hilt-injected
      * [AuthViewModel]. Overridden in tests that cannot bring up Hilt — see PantryNavHostTest.
@@ -21,7 +22,7 @@ fun PantryNavHost(
         AuthScreen(onAuthenticated = onAuthenticated)
     },
 ) {
-    NavHost(navController = navController, startDestination = PantryRoute.Auth.path) {
+    NavHost(navController = navController, startDestination = startDestination) {
         composable(PantryRoute.Auth.path) {
             authScreen {
                 navController.navigate(PantryRoute.Household.path) {
