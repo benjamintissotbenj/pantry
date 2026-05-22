@@ -136,4 +136,19 @@ class AuthViewModelTest {
         assertEquals("Check your inbox to reset your password.", state.toastMessage)
         assertFalse(state.showResetDialog)
     }
+
+    @Test
+    fun `sendPasswordReset failure surfaces inline resetEmailError and keeps dialog open`() = runTest {
+        coEvery { repo.sendPasswordReset("a@b.com") } returns Result.failure(AuthError.NoNetwork)
+        vm.openResetDialog(prefill = "a@b.com")
+        vm.sendPasswordReset()
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        assertEquals("No internet connection", state.resetEmailError)
+        assertTrue(state.showResetDialog)
+        assertFalse(state.isSendingReset)
+        // Ensure the failure did NOT leak to the global toast
+        assertEquals(null, state.toastMessage)
+    }
 }

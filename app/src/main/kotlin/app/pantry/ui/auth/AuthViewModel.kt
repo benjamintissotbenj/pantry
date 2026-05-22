@@ -79,7 +79,16 @@ class AuthViewModel @Inject constructor(
                         )
                     }
                 },
-                onFailure = { e -> _state.update { it.copy(isSendingReset = false).withErrorMessage(e as? AuthError ?: AuthError.Unknown(e)) } },
+                onFailure = { e ->
+                    val authError = e as? AuthError ?: AuthError.Unknown(e)
+                    val message = when (authError) {
+                        AuthError.InvalidEmail -> "Enter a valid email address"
+                        AuthError.NoNetwork -> "No internet connection"
+                        AuthError.InvalidCredentials -> "No account found for this email"
+                        else -> "Something went wrong. Try again."
+                    }
+                    _state.update { it.copy(isSendingReset = false, resetEmailError = message) }
+                },
             )
         }
     }
