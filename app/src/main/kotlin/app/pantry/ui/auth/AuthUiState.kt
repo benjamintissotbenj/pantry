@@ -13,6 +13,10 @@ data class AuthUiState(
     val isSubmitting: Boolean = false,
     val toastMessage: String? = null,        // transient errors / confirmations
     val navigateToHousehold: Boolean = false,
+    val showResetDialog: Boolean = false,
+    val resetEmail: String = "",
+    val resetEmailError: String? = null,
+    val isSendingReset: Boolean = false,
 ) {
     enum class Mode { Welcome, EmailSignIn, EmailSignUp }
 

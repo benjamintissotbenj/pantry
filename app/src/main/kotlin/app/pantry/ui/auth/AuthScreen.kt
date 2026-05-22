@@ -65,6 +65,12 @@ fun AuthScreen(
                 AuthUiState.Mode.EmailSignUp -> EmailForm(state, viewModel)
             }
         }
+        ForgotPasswordDialog(
+            state = state,
+            onEmailChange = viewModel::onResetEmailChange,
+            onSend = viewModel::sendPasswordReset,
+            onDismiss = viewModel::closeResetDialog,
+        )
     }
 }
 
@@ -113,6 +119,12 @@ private fun EmailForm(state: AuthUiState, viewModel: AuthViewModel) {
         modifier = Modifier.fillMaxWidth().testTag("field_password"),
         singleLine = true,
     )
+    if (state.mode == AuthUiState.Mode.EmailSignIn) {
+        TextButton(
+            onClick = { viewModel.openResetDialog(prefill = state.email) },
+            modifier = Modifier.testTag("forgot_password"),
+        ) { Text("Forgot password?") }
+    }
     Spacer(Modifier.height(16.dp))
     Button(
         onClick = viewModel::submit,

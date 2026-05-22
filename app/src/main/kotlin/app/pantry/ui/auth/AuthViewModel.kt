@@ -54,6 +54,36 @@ class AuthViewModel @Inject constructor(
     fun consumeNavigation() = _state.update { it.copy(navigateToHousehold = false) }
     fun consumeToast() = _state.update { it.copy(toastMessage = null) }
 
+    fun openResetDialog(prefill: String) = _state.update {
+        it.copy(showResetDialog = true, resetEmail = prefill, resetEmailError = null)
+    }
+
+    fun onResetEmailChange(value: String) = _state.update {
+        it.copy(resetEmail = value, resetEmailError = if (value.isBlank() || EMAIL_REGEX.matches(value)) null else "Enter a valid email address")
+    }
+
+    fun closeResetDialog() = _state.update { it.copy(showResetDialog = false, resetEmailError = null, isSendingReset = false) }
+
+    fun sendPasswordReset() {
+        val s = _state.value
+        if (s.resetEmail.isBlank() || s.resetEmailError != null || s.isSendingReset) return
+        _state.update { it.copy(isSendingReset = true) }
+        viewModelScope.launch {
+            auth.sendPasswordReset(s.resetEmail).fold(
+                onSuccess = {
+                    _state.update {
+                        it.copy(
+                            isSendingReset = false,
+                            showResetDialog = false,
+                            toastMessage = "Check your inbox to reset your password.",
+                        )
+                    }
+                },
+                onFailure = { e -> _state.update { it.copy(isSendingReset = false).withErrorMessage(e as? AuthError ?: AuthError.Unknown(e)) } },
+            )
+        }
+    }
+
     companion object {
         private val EMAIL_REGEX = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
     }

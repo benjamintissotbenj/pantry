@@ -125,4 +125,15 @@ class AuthViewModelTest {
         assertEquals("That email is already registered", state.toastMessage)
         assertFalse(state.isSubmitting)
     }
+
+    @Test
+    fun `sendPasswordReset shows confirmation toast`() = runTest {
+        coEvery { repo.sendPasswordReset("a@b.com") } returns Result.success(Unit)
+        vm.openResetDialog(prefill = "a@b.com")
+        vm.sendPasswordReset()
+        advanceUntilIdle()
+        val state = vm.uiState.value
+        assertEquals("Check your inbox to reset your password.", state.toastMessage)
+        assertFalse(state.showResetDialog)
+    }
 }
