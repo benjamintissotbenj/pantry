@@ -121,4 +121,46 @@ class AddEditItemViewModelTest {
         advanceUntilIdle()
         coVerify(exactly = 0) { stock.delete(any(), any()) }
     }
+
+    @Test
+    fun `blank default restock quantity creates item with null`() = runTest {
+        coEvery { stock.create(any(), any(), any(), any(), any(), any(), defaultRestockQuantity = null) } returns
+            Result.success(StockItem("i-1", "Milk", "", StockUnit.COUNT, 1.0, 1.0, Instant.now(), null))
+        val vm = AddEditItemViewModel(ch, stock)
+        vm.beginAdd()
+        vm.onNameChange("Milk")
+        vm.onQuantityChange("1")
+        vm.submit()
+        advanceUntilIdle()
+        coVerify { stock.create(any(), any(), any(), any(), any(), any(), defaultRestockQuantity = null) }
+    }
+
+    @Test
+    fun `numeric default restock quantity round-trips on edit`() = runTest {
+        coEvery { stock.update(any(), any(), any(), any(), any(), any(), any(), defaultRestockQuantity = 4.0) } returns
+            Result.success(Unit)
+        val vm = AddEditItemViewModel(ch, stock)
+        vm.beginEdit(
+            itemId = "x",
+            name = "Milk",
+            quantity = 0.0,
+            unit = StockUnit.COUNT,
+            threshold = 2.0,
+            category = "Dairy",
+            defaultRestockQuantity = null,
+        )
+        vm.onDefaultRestockQuantityChange("4")
+        vm.submit()
+        advanceUntilIdle()
+        coVerify { stock.update(any(), any(), any(), any(), any(), any(), any(), defaultRestockQuantity = 4.0) }
+    }
+
+    @Test
+    fun `non-numeric default restock quantity blocks submission`() = runTest {
+        val vm = AddEditItemViewModel(ch, stock)
+        vm.beginAdd()
+        vm.onNameChange("Milk")
+        vm.onDefaultRestockQuantityChange("abc")
+        assertFalse(vm.uiState.value.canSubmit)
+    }
 }
