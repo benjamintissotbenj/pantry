@@ -59,11 +59,6 @@ class ShoppingListViewModel @Inject constructor(
         viewModelScope.launch { shopping.setChecked(hid, entryId, newChecked) }
     }
 
-    fun onAddManual(name: String, linkedItemId: String?) {
-        val hid = currentHousehold.currentHouseholdId.value ?: return
-        viewModelScope.launch { shopping.addEntry(hid, name.trim(), linkedItemId) }
-    }
-
     fun onFinishShopping(onDone: (success: Boolean) -> Unit) {
         val hid = currentHousehold.currentHouseholdId.value ?: return onDone(false)
         val plan = buildPlanFromState() ?: return onDone(false)
