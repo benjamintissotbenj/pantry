@@ -52,8 +52,10 @@ class AndroidConnectivityRepository @Inject constructor(
                 }
             }
         }
-        cm.registerDefaultNetworkCallback(callback)
+        // Seed BEFORE registering the callback so a real callback emission can't be
+        // overwritten by a now-stale snapshot read.
         trySend(!cm.isCurrentlyConnected())
+        cm.registerDefaultNetworkCallback(callback)
         awaitClose { cm.unregisterNetworkCallback(callback) }
     }.stateIn(scope, SharingStarted.Eagerly, initial)
 
