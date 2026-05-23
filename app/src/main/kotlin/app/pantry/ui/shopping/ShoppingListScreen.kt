@@ -75,7 +75,7 @@ fun ShoppingListScreen(
             ) { Icon(Icons.Default.Add, contentDescription = "Add manual entry") }
         },
     ) { padding ->
-        if (state.isEmpty && !state.isLoading) {
+        if (state.isEmpty) {
             EmptyState(Modifier.padding(padding))
         } else {
             LazyColumn(
@@ -85,7 +85,7 @@ fun ShoppingListScreen(
             ) {
                 if (state.runningLow.isNotEmpty()) {
                     item { SectionHeader("Running low") }
-                    state.runningLow.forEach { sub ->
+                    for (sub in state.runningLow) {
                         item { CategorySubHeader(sub.category) }
                         items(sub.entries, key = { it.id }) { entry ->
                             EntryRow(
@@ -103,7 +103,7 @@ fun ShoppingListScreen(
                 }
                 if (state.manual.isNotEmpty()) {
                     item { SectionHeader("Added manually") }
-                    state.manual.forEach { sub ->
+                    for (sub in state.manual) {
                         item { CategorySubHeader(sub.category) }
                         items(sub.entries, key = { it.id }) { entry ->
                             EntryRow(
