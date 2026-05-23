@@ -5,4 +5,6 @@ data class Household(
     val name: String,
     val memberUids: List<String>,
     val inviteCode: String,
+    val createdBy: String,
+    val members: Map<String, MemberSummary>,
 )

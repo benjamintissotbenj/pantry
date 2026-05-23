@@ -60,7 +60,7 @@ class FirestoreHouseholdRepository @Inject constructor(
                 SetOptions.merge(),
             )
         }.await()
-        Household(id = doc.id, name = name, memberUids = listOf(ownerUid), inviteCode = code)
+        Household(id = doc.id, name = name, memberUids = listOf(ownerUid), inviteCode = code, createdBy = ownerUid, members = emptyMap())
     }
 
     override suspend fun rename(householdId: String, newName: String): Result<Unit> = runCatching {
@@ -82,6 +82,8 @@ class FirestoreHouseholdRepository @Inject constructor(
             name = getString("name").orEmpty(),
             memberUids = members,
             inviteCode = getString("inviteCode").orEmpty(),
+            createdBy = getString("createdBy").orEmpty(),
+            members = emptyMap(),
         )
     }
 

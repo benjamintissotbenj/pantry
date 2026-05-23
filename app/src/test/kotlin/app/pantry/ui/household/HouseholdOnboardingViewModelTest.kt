@@ -44,7 +44,7 @@ class HouseholdOnboardingViewModelTest {
     @Test
     fun `create flow navigates to home on success`() = runTest {
         coEvery { householdRepo.create("Casa", "u-1") } returns Result.success(
-            Household("h-1", "Casa", listOf("u-1"), "ABCDEF")
+            Household(id = "h-1", name = "Casa", memberUids = listOf("u-1"), inviteCode = "ABCDEF", createdBy = "", members = emptyMap())
         )
         vm.switchMode(HouseholdOnboardingUiState.Mode.Create)
         vm.onNameChange("Casa")

@@ -57,7 +57,7 @@ class StartRouterTest {
     fun `routes to Home when user has a household`() = runTest {
         val auth: AuthRepository = mockk { every { currentUser } returns MutableStateFlow(UserProfile("u-1", "A", "a@b.com")) }
         val households: HouseholdRepository = mockk {
-            every { observeUserHouseholds("u-1") } returns flowOf(listOf(Household("h-1", "Casa", listOf("u-1"), "ABCDEF")))
+            every { observeUserHouseholds("u-1") } returns flowOf(listOf(Household(id = "h-1", name = "Casa", memberUids = listOf("u-1"), inviteCode = "ABCDEF", createdBy = "", members = emptyMap())))
         }
         val vm = StartRouterViewModel(auth, households)
         vm.initialRoute.test {

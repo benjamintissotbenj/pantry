@@ -33,7 +33,7 @@ class SettingsViewModelTest {
         Dispatchers.setMain(UnconfinedTestDispatcher())
         every { authRepo.currentUser } returns MutableStateFlow(UserProfile("u-1", "Alice", "a@b.com"))
         every { householdRepo.observeUserHouseholds("u-1") } returns
-            flowOf(listOf(Household("h-1", "Casa", listOf("u-1"), "ABCDEF")))
+            flowOf(listOf(Household(id = "h-1", name = "Casa", memberUids = listOf("u-1"), inviteCode = "ABCDEF", createdBy = "", members = emptyMap())))
     }
 
     @AfterEach

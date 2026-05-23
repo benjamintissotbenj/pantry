@@ -36,7 +36,7 @@ class HouseholdOnboardingScreenTest {
         val joinGateway: JoinHouseholdGateway = mockk(relaxed = true)
         every { authRepo.currentUser } returns MutableStateFlow(UserProfile("u-1", "Alice", "a@b.com"))
         coEvery { householdRepo.create("Casa", "u-1") } returns Result.success(
-            Household("h-1", "Casa", listOf("u-1"), "ABCDEF")
+            Household(id = "h-1", name = "Casa", memberUids = listOf("u-1"), inviteCode = "ABCDEF", createdBy = "", members = emptyMap())
         )
 
         var created = false

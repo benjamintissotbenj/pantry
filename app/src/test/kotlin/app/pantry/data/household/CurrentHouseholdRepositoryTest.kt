@@ -54,7 +54,7 @@ class CurrentHouseholdRepositoryTest {
     fun `emits first household id`() = runTest {
         val auth: AuthRepository = mockk { every { currentUser } returns MutableStateFlow(UserProfile("u-1", "A", "a@b.com")) }
         val households: HouseholdRepository = mockk {
-            every { observeUserHouseholds("u-1") } returns flowOf(listOf(Household("h-1", "Casa", listOf("u-1"), "ABCDEF")))
+            every { observeUserHouseholds("u-1") } returns flowOf(listOf(Household(id = "h-1", name = "Casa", memberUids = listOf("u-1"), inviteCode = "ABCDEF", createdBy = "", members = emptyMap())))
         }
         val repo = CurrentHouseholdRepository(auth, households, makeScope())
         repo.currentHouseholdId.test {
