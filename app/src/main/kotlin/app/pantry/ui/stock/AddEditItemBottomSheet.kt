@@ -107,6 +107,16 @@ fun AddEditItemBottomSheet(
                 modifier = Modifier.fillMaxWidth().testTag("field_threshold"),
             )
 
+            OutlinedTextField(
+                value = state.defaultRestockQuantity,
+                onValueChange = viewModel::onDefaultRestockQuantityChange,
+                label = { Text("Default restock quantity (optional)") },
+                supportingText = { Text("When you tap Finish shopping, this becomes your new total") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth().testTag("field_default_restock"),
+            )
+
             Text("Category", style = MaterialTheme.typography.labelLarge)
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 existingCategories.forEach { cat ->

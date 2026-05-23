@@ -36,16 +36,18 @@ class FirestoreStockItemRepository @Inject constructor(
         unit: StockUnit,
         quantity: Double,
         threshold: Double,
+        defaultRestockQuantity: Double?,
     ): Result<StockItem> = runCatching {
         val doc = itemsCol(householdId).document()
-        val data = mapOf(
-            "name" to name,
-            "category" to category,
-            "unit" to unit.storageKey,
-            "quantity" to quantity,
-            "threshold" to threshold,
-            "updatedAt" to FieldValue.serverTimestamp(),
-        )
+        val data = buildMap<String, Any> {
+            put("name", name)
+            put("category", category)
+            put("unit", unit.storageKey)
+            put("quantity", quantity)
+            put("threshold", threshold)
+            put("updatedAt", FieldValue.serverTimestamp())
+            if (defaultRestockQuantity != null) put("defaultRestockQuantity", defaultRestockQuantity)
+        }
         doc.set(data).await()
         StockItem(
             id = doc.id,
@@ -55,6 +57,7 @@ class FirestoreStockItemRepository @Inject constructor(
             quantity = quantity,
             threshold = threshold,
             updatedAt = Instant.now(),
+            defaultRestockQuantity = defaultRestockQuantity,
         )
     }
 
@@ -68,15 +71,17 @@ class FirestoreStockItemRepository @Inject constructor(
         unit: StockUnit,
         quantity: Double,
         threshold: Double,
+        defaultRestockQuantity: Double?,
     ): Result<Unit> = runCatching {
-        val data = mapOf(
-            "name" to name,
-            "category" to category,
-            "unit" to unit.storageKey,
-            "quantity" to quantity,
-            "threshold" to threshold,
-            "updatedAt" to FieldValue.serverTimestamp(),
-        )
+        val data = buildMap<String, Any> {
+            put("name", name)
+            put("category", category)
+            put("unit", unit.storageKey)
+            put("quantity", quantity)
+            put("threshold", threshold)
+            put("updatedAt", FieldValue.serverTimestamp())
+            put("defaultRestockQuantity", defaultRestockQuantity ?: FieldValue.delete())
+        }
         itemsCol(householdId).document(itemId).update(data).await()
     }
 
@@ -106,6 +111,7 @@ class FirestoreStockItemRepository @Inject constructor(
         val updatedAt = getTimestamp("updatedAt")
             ?.let { Instant.ofEpochSecond(it.seconds, it.nanoseconds.toLong()) }
             ?: Instant.EPOCH
+        val defaultRestockQuantity = if (contains("defaultRestockQuantity")) getDouble("defaultRestockQuantity") else null
         return StockItem(
             id = id,
             name = name,
@@ -114,6 +120,7 @@ class FirestoreStockItemRepository @Inject constructor(
             quantity = quantity,
             threshold = threshold,
             updatedAt = updatedAt,
+            defaultRestockQuantity = defaultRestockQuantity,
         )
     }
 }

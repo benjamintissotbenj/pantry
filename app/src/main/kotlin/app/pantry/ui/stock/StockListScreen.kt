@@ -60,6 +60,7 @@ fun StockListScreen(
             unit = item.unit,
             threshold = item.threshold,
             category = item.category,
+            defaultRestockQuantity = item.defaultRestockQuantity,
         )
         sheetOpen = true
     }

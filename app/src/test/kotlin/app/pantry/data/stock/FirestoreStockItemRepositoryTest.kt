@@ -49,6 +49,7 @@ class FirestoreStockItemRepositoryTest {
             unit = StockUnit.LITER,
             quantity = 1.5,
             threshold = 1.0,
+            defaultRestockQuantity = null,
         )
 
         assertTrue(result.isSuccess)
@@ -78,6 +79,7 @@ class FirestoreStockItemRepositoryTest {
             unit = StockUnit.LITER,
             quantity = 0.5,
             threshold = 1.0,
+            defaultRestockQuantity = null,
         )
 
         assertTrue(result.isSuccess)

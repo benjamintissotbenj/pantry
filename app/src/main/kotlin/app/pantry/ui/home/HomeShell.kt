@@ -21,7 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import app.pantry.ui.settings.SettingsScreen
-import app.pantry.ui.shopping.ShoppingPlaceholderScreen
+import app.pantry.ui.shopping.ShoppingListScreen
 import app.pantry.ui.stock.StockListScreen
 
 @Composable
@@ -62,7 +62,7 @@ fun HomeShell(onSignedOut: () -> Unit) {
         Box(Modifier.fillMaxSize().padding(padding)) {
             when (tab) {
                 HomeTab.Stock -> StockListScreen()
-                HomeTab.Shopping -> ShoppingPlaceholderScreen()
+                HomeTab.Shopping -> ShoppingListScreen()
                 HomeTab.Settings -> SettingsScreen(onSignedOut = onSignedOut)
             }
         }

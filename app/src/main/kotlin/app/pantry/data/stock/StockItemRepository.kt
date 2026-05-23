@@ -14,6 +14,7 @@ interface StockItemRepository {
         unit: StockUnit,
         quantity: Double,
         threshold: Double,
+        defaultRestockQuantity: Double?,
     ): Result<StockItem>
 
     suspend fun update(
@@ -24,6 +25,7 @@ interface StockItemRepository {
         unit: StockUnit,
         quantity: Double,
         threshold: Double,
+        defaultRestockQuantity: Double?,
     ): Result<Unit>
 
     suspend fun delete(householdId: String, itemId: String): Result<Unit>

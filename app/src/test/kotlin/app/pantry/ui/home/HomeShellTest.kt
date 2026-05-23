@@ -6,10 +6,15 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import app.pantry.data.household.CurrentHouseholdRepository
+import app.pantry.data.shopping.ShoppingEntryRepository
 import app.pantry.data.stock.StockItemRepository
+import app.pantry.ui.shopping.AddManualEntryViewModel
+import app.pantry.ui.shopping.ShoppingListScreen
+import app.pantry.ui.shopping.ShoppingListViewModel
 import app.pantry.ui.stock.AddEditItemViewModel
 import app.pantry.ui.stock.StockListScreen
 import app.pantry.ui.stock.StockListViewModel
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -47,14 +52,31 @@ class HomeShellTest {
         composeRule.onNodeWithTag("stock_fab").assertIsDisplayed()
     }
 
+    private fun makeShoppingVm(): ShoppingListViewModel {
+        val ch: CurrentHouseholdRepository = mockk { every { currentHouseholdId } returns MutableStateFlow(null) }
+        val stock: StockItemRepository = mockk { coEvery { observe(any()) } returns flowOf(emptyList()) }
+        val shopping: ShoppingEntryRepository = mockk(relaxed = true)
+        return ShoppingListViewModel(ch, stock, shopping)
+    }
+
+    private fun makeAddManualVm(): AddManualEntryViewModel {
+        val ch: CurrentHouseholdRepository = mockk { every { currentHouseholdId } returns MutableStateFlow(null) }
+        val stock: StockItemRepository = mockk { coEvery { observe(any()) } returns flowOf(emptyList()) }
+        val shopping: ShoppingEntryRepository = mockk(relaxed = true)
+        return AddManualEntryViewModel(ch, stock, shopping)
+    }
+
     @Test
-    fun tap_shopping_tab_shows_shopping_placeholder() {
+    fun tap_shopping_tab_shows_shopping_screen() {
         composeRule.setContent {
             androidx.compose.foundation.layout.Box {
-                // Navigate directly to Shopping placeholder to avoid Hilt on Stock
-                app.pantry.ui.shopping.ShoppingPlaceholderScreen()
+                // Render ShoppingListScreen directly with mocked VMs to avoid Hilt
+                ShoppingListScreen(
+                    viewModel = makeShoppingVm(),
+                    manualEntryViewModel = makeAddManualVm(),
+                )
             }
         }
-        composeRule.onNodeWithText("Shopping — coming soon").assertIsDisplayed()
+        composeRule.onNodeWithTag("fab_add_manual").assertIsDisplayed()
     }
 }

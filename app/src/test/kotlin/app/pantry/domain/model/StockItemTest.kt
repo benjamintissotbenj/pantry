@@ -12,19 +12,19 @@ class StockItemTest {
 
     @Test
     fun `isLowStock true when quantity below threshold`() {
-        val item = StockItem("i-1", "Milk", "Fridge", StockUnit.LITER, 0.5, 1.0, now)
+        val item = StockItem("i-1", "Milk", "Fridge", StockUnit.LITER, 0.5, 1.0, now, null)
         assertTrue(item.isLowStock)
     }
 
     @Test
     fun `isLowStock false when quantity equals threshold`() {
-        val item = StockItem("i-1", "Milk", "Fridge", StockUnit.LITER, 1.0, 1.0, now)
+        val item = StockItem("i-1", "Milk", "Fridge", StockUnit.LITER, 1.0, 1.0, now, null)
         assertFalse(item.isLowStock)
     }
 
     @Test
     fun `isLowStock false when quantity above threshold`() {
-        val item = StockItem("i-1", "Milk", "Fridge", StockUnit.LITER, 2.0, 1.0, now)
+        val item = StockItem("i-1", "Milk", "Fridge", StockUnit.LITER, 2.0, 1.0, now, null)
         assertFalse(item.isLowStock)
     }
 

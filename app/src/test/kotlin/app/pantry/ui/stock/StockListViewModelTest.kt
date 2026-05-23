@@ -29,7 +29,7 @@ class StockListViewModelTest {
     private val now = Instant.parse("2026-06-01T10:00:00Z")
 
     private fun item(name: String, category: String): StockItem =
-        StockItem("id-$name", name, category, StockUnit.COUNT, 1.0, 1.0, now)
+        StockItem("id-$name", name, category, StockUnit.COUNT, 1.0, 1.0, now, null)
 
     @BeforeEach fun setUp() { Dispatchers.setMain(UnconfinedTestDispatcher()) }
     @AfterEach fun tearDown() { Dispatchers.resetMain() }

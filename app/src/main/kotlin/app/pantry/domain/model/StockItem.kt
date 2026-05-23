@@ -10,6 +10,7 @@ data class StockItem(
     val quantity: Double,
     val threshold: Double,
     val updatedAt: Instant,
+    val defaultRestockQuantity: Double?,
 ) {
     val isLowStock: Boolean get() = quantity < threshold
 }

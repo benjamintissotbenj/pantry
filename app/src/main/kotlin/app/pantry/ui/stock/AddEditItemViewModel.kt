@@ -36,6 +36,7 @@ class AddEditItemViewModel @Inject constructor(
         unit: StockUnit,
         threshold: Double,
         category: String,
+        defaultRestockQuantity: Double? = null,
     ) {
         _state.value = AddEditItemUiState(
             mode = AddEditItemUiState.Mode.Edit,
@@ -44,6 +45,7 @@ class AddEditItemViewModel @Inject constructor(
             quantity = formatQuantity(quantity),
             unit = unit,
             threshold = formatQuantity(threshold),
+            defaultRestockQuantity = defaultRestockQuantity?.let { formatQuantity(it) } ?: "",
             category = category,
         )
     }
@@ -52,6 +54,7 @@ class AddEditItemViewModel @Inject constructor(
     fun onQuantityChange(v: String) = _state.update { it.copy(quantity = v) }
     fun onUnitChange(u: StockUnit) = _state.update { it.copy(unit = u) }
     fun onThresholdChange(v: String) = _state.update { it.copy(threshold = v) }
+    fun onDefaultRestockQuantityChange(v: String) = _state.update { it.copy(defaultRestockQuantity = v) }
     fun onCategoryChange(v: String) = _state.update { it.copy(category = v) }
     fun consumeToast() = _state.update { it.copy(toast = null) }
 
@@ -61,6 +64,7 @@ class AddEditItemViewModel @Inject constructor(
         val hid = currentHousehold.currentHouseholdId.value ?: return
         _state.update { it.copy(isSubmitting = true, toast = null) }
         viewModelScope.launch {
+            val drq = s.defaultRestockQuantity.takeIf { it.isNotBlank() }?.toDoubleOrNull()
             val result = if (s.mode == AddEditItemUiState.Mode.Add) {
                 stock.create(
                     householdId = hid,
@@ -69,6 +73,7 @@ class AddEditItemViewModel @Inject constructor(
                     unit = s.unit,
                     quantity = s.quantity.toDoubleOrNull() ?: 0.0,
                     threshold = s.threshold.toDoubleOrNull() ?: 1.0,
+                    defaultRestockQuantity = drq,
                 ).map { Unit }
             } else {
                 stock.update(
@@ -79,6 +84,7 @@ class AddEditItemViewModel @Inject constructor(
                     unit = s.unit,
                     quantity = s.quantity.toDoubleOrNull() ?: 0.0,
                     threshold = s.threshold.toDoubleOrNull() ?: 1.0,
+                    defaultRestockQuantity = drq,
                 )
             }
             result.fold(

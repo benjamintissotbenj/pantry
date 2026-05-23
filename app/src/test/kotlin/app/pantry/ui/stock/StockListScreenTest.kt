@@ -48,7 +48,7 @@ class StockListScreenTest {
     @Test
     fun shows_item_rows_when_present() {
         val items = listOf(
-            StockItem("i-1", "Milk", "Fridge", StockUnit.LITER, 1.5, 1.0, now),
+            StockItem("i-1", "Milk", "Fridge", StockUnit.LITER, 1.5, 1.0, now, null),
         )
         composeRule.setContent { StockListScreen(viewModel = makeVm(items), sheetViewModel = makeSheetVm()) }
         composeRule.onNodeWithTag("stock_row_i-1").assertIsDisplayed()
