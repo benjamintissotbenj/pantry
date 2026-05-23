@@ -10,6 +10,7 @@ import app.pantry.domain.model.ShoppingEntry
 import app.pantry.domain.model.StockItem
 import app.pantry.domain.model.StockUnit
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import java.time.Instant
@@ -17,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -225,6 +227,45 @@ class ShoppingListViewModelTest {
             assertEquals(true, done)
             cancelAndConsumeRemainingEvents()
         }
+    }
+
+    @Test
+    fun `auto toggle flips state without touching repo`() = runTest {
+        val items = listOf(item("a", "Milk", quantity = 0.0, threshold = 2.0))
+        val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(items) }
+        val shopping = mockk<ShoppingEntryRepository>().also {
+            coEvery { it.observe(any()) } returns flowOf(emptyList())
+        }
+        val vm = ShoppingListViewModel(household, stock, shopping)
+
+        vm.onAutoEntryToggle("a")
+
+        vm.uiState.test {
+            var s = awaitItem(); while (s.isLoading || s.runningLow.isEmpty()) s = awaitItem()
+            val entry = s.runningLow.first().entries.first()
+            assertTrue(entry.checked)
+            cancelAndConsumeRemainingEvents()
+        }
+        coVerify(exactly = 0) { shopping.setChecked(any(), any(), any()) }
+    }
+
+    @Test
+    fun `manual toggle calls repo setChecked`() = runTest {
+        val manual = listOf(
+            ShoppingEntry(
+                id = "e1", name = "Wine", source = ShoppingEntry.Source.MANUAL,
+                checked = false, createdAt = Instant.now(), linkedItemId = null,
+                category = "Other", currentQuantity = null, threshold = null, defaultRestockQuantity = null,
+            ),
+        )
+        val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
+        val shopping = mockk<ShoppingEntryRepository>(relaxed = true).also {
+            coEvery { it.observe(any()) } returns flowOf(manual)
+        }
+        val vm = ShoppingListViewModel(household, stock, shopping)
+        vm.onManualEntryToggle("e1", true)
+        advanceUntilIdle()
+        coVerify { shopping.setChecked("HH", "e1", true) }
     }
 
     private fun vmEmpty(): ShoppingListViewModel {

@@ -58,6 +58,31 @@ class ShoppingListScreenTest {
     }
 
     @Test
+    fun `checked manual entry is displayed`() {
+        val hid = MutableStateFlow<String?>("HH")
+        val household = mockk<CurrentHouseholdRepository>().also { every { it.currentHouseholdId } returns hid }
+        val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
+        val shopping = mockk<ShoppingEntryRepository>(relaxed = true).also {
+            coEvery { it.observe(any()) } returns flowOf(
+                listOf(
+                    app.pantry.domain.model.ShoppingEntry(
+                        id = "e1", name = "Wine",
+                        source = app.pantry.domain.model.ShoppingEntry.Source.MANUAL,
+                        checked = true, createdAt = Instant.now(), linkedItemId = null,
+                        category = "Other", currentQuantity = null, threshold = null, defaultRestockQuantity = null,
+                    ),
+                ),
+            )
+        }
+        val vm = ShoppingListViewModel(household, stock, shopping)
+        compose.setContent { ShoppingListScreen(viewModel = vm) }
+
+        // Compose has no direct LineThrough matcher — verify the entry's row tag renders, which is the
+        // wire we care about (the strike-through is a visual decoration we trust the Composable applies).
+        compose.onNodeWithTag("entry_e1").assertIsDisplayed()
+    }
+
+    @Test
     fun `empty state shows when no items or manual entries`() {
         val hid = MutableStateFlow<String?>("HH")
         val household = mockk<CurrentHouseholdRepository>().also { every { it.currentHouseholdId } returns hid }
