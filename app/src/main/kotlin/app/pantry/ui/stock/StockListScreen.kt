@@ -202,8 +202,7 @@ private fun StockRow(
 ) {
     val isOutOfStock = item.quantity == 0.0
     val rowAlpha = if (isOutOfStock) 0.5f else 1f
-    val isLowAndNotZero = item.isLowStock && !isOutOfStock
-    val qtyColor = if (isLowAndNotZero) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+    val qtyColor = if (item.isLowStock) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
     val qtyStyle = if (isOutOfStock)
         MaterialTheme.typography.bodyLarge.copy(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
     else MaterialTheme.typography.bodyLarge
@@ -226,7 +225,7 @@ private fun StockRow(
             modifier = Modifier.testTag("stock_minus_${item.id}"),
         ) { Icon(Icons.Filled.Remove, contentDescription = "Decrease") }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (isLowAndNotZero) {
+            if (item.isLowStock) {
                 Text(
                     "⚠ ",
                     color = qtyColor,

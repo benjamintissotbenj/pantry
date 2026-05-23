@@ -43,4 +43,22 @@ class LowStockBadgeTest {
         }
         composeRule.onNodeWithTag("low_stock_badge_i-1").assertIsDisplayed()
     }
+
+    @Test
+    fun shows_low_stock_badge_when_quantity_is_zero() {
+        // quantity 0, threshold 1.0 → still below threshold → badge expected
+        val item = StockItem("i-2", "Milk", "Fridge", StockUnit.LITER, 0.0, 1.0, now, null)
+        val ch: CurrentHouseholdRepository = mockk { every { currentHouseholdId } returns MutableStateFlow("h-1") }
+        val stock: StockItemRepository = mockk { every { observe("h-1") } returns flowOf(listOf(item)) }
+        val sheetVm: AddEditItemViewModel = mockk(relaxed = true) {
+            every { uiState } returns MutableStateFlow(AddEditItemUiState())
+        }
+        composeRule.setContent {
+            StockListScreen(
+                viewModel = StockListViewModel(ch, stock),
+                sheetViewModel = sheetVm,
+            )
+        }
+        composeRule.onNodeWithTag("low_stock_badge_i-2").assertIsDisplayed()
+    }
 }
