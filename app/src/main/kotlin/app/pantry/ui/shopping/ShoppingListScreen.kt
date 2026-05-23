@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Checkbox
@@ -24,13 +25,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,6 +47,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.pantry.domain.model.ShoppingEntry
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,8 +58,28 @@ fun ShoppingListScreen(
     val state by viewModel.uiState.collectAsState()
     var overflowOpen by remember { mutableStateOf(false) }
     var showAddManual by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    var confirmFinish by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state.pendingReport) {
+        val report = state.pendingReport ?: return@LaunchedEffect
+        val msg = "${report.restockedCount} restocked, ${report.clearedCount} cleared"
+        val withDetails = report.skippedCount > 0
+        val result = snackbarHostState.showSnackbar(
+            message = if (withDetails) "$msg — ${report.skippedCount} skipped" else msg,
+            actionLabel = if (withDetails) "Details" else null,
+            duration = SnackbarDuration.Short,
+        )
+        if (result == SnackbarResult.ActionPerformed) {
+            viewModel.showSkipped()
+        } else {
+            viewModel.consumeReport()
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Shopping list") },
@@ -62,8 +91,9 @@ fun ShoppingListScreen(
                     DropdownMenu(expanded = overflowOpen, onDismissRequest = { overflowOpen = false }) {
                         DropdownMenuItem(
                             text = { Text("Finish shopping") },
-                            enabled = false, // wired in US-10
-                            onClick = { overflowOpen = false },
+                            enabled = state.finishShoppingPreview.restockCount > 0
+                                || state.finishShoppingPreview.clearCount > 0,
+                            onClick = { overflowOpen = false; confirmFinish = true },
                             modifier = Modifier.testTag("menu_finish_shopping"),
                         )
                     }
@@ -125,6 +155,47 @@ fun ShoppingListScreen(
         AddManualEntryBottomSheet(
             viewModel = manualEntryViewModel,
             onDismiss = { showAddManual = false },
+        )
+    }
+
+    if (confirmFinish) {
+        val p = state.finishShoppingPreview
+        AlertDialog(
+            onDismissRequest = { confirmFinish = false },
+            title = { Text("Finish shopping?") },
+            text = {
+                Column {
+                    Text("Restock ${p.restockCount} items, clear ${p.clearCount} manual entries.")
+                    if (p.skipCount > 0) Text("${p.skipCount} item(s) will be skipped (no default quantity).")
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmFinish = false
+                        viewModel.onFinishShopping { success ->
+                            if (!success) scope.launch {
+                                snackbarHostState.showSnackbar("Couldn't finish shopping — try again")
+                            }
+                        }
+                    },
+                    modifier = Modifier.testTag("confirm_finish"),
+                ) { Text("Finish") }
+            },
+            dismissButton = { TextButton(onClick = { confirmFinish = false }) { Text("Cancel") } },
+        )
+    }
+
+    if (state.skippedDialogVisible) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissSkipped,
+            title = { Text("Skipped") },
+            text = {
+                Column { state.pendingReport?.skippedNames?.forEach { Text(it) } }
+            },
+            confirmButton = {
+                TextButton(onClick = viewModel::dismissSkipped) { Text("OK") }
+            },
         )
     }
 }

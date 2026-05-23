@@ -2,17 +2,21 @@ package app.pantry.ui.shopping
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import app.pantry.data.household.CurrentHouseholdRepository
 import app.pantry.data.shopping.ShoppingEntryRepository
 import app.pantry.data.stock.StockItemRepository
 import app.pantry.domain.model.StockItem
 import app.pantry.domain.model.StockUnit
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.test.advanceUntilIdle
 import java.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
@@ -103,5 +107,60 @@ class ShoppingListScreenTest {
         compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm) }
 
         compose.onNodeWithText("Nothing to buy").assertIsDisplayed()
+    }
+
+    @Test
+    fun `finish shopping menu item is disabled when nothing is checked`() {
+        val hid = MutableStateFlow<String?>("HH")
+        val household = mockk<CurrentHouseholdRepository>().also { every { it.currentHouseholdId } returns hid }
+        val stock = mockk<StockItemRepository>().also {
+            coEvery { it.observe(any()) } returns flowOf(
+                listOf(
+                    StockItem("a", "Milk", "Dairy", StockUnit.COUNT, 0.0, 2.0, Instant.now(), 4.0),
+                ),
+            )
+        }
+        val shopping = mockk<ShoppingEntryRepository>(relaxed = true).also {
+            coEvery { it.observe(any()) } returns flowOf(emptyList())
+        }
+        val vm = ShoppingListViewModel(household, stock, shopping)
+        val manualVm = makeManualEntryViewModel(hid)
+        compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm) }
+
+        compose.onNodeWithTag("overflow").performClick()
+        compose.onNodeWithTag("menu_finish_shopping").assertIsNotEnabled()
+    }
+
+    @Test
+    fun `confirming finish shopping fires the VM action`() = kotlinx.coroutines.test.runTest(kotlinx.coroutines.test.UnconfinedTestDispatcher()) {
+        val hid = MutableStateFlow<String?>("HH")
+        val household = mockk<CurrentHouseholdRepository>().also { every { it.currentHouseholdId } returns hid }
+        val stock = mockk<StockItemRepository>().also {
+            coEvery { it.observe(any()) } returns flowOf(
+                listOf(
+                    StockItem("a", "Milk", "Dairy", StockUnit.COUNT, 0.0, 2.0, Instant.now(), 4.0),
+                ),
+            )
+        }
+        val shopping = mockk<ShoppingEntryRepository>(relaxed = true).also {
+            coEvery { it.observe(any()) } returns flowOf(emptyList())
+            coEvery { it.finishShopping(any(), any()) } returns Result.success(
+                app.pantry.data.shopping.FinishShoppingReport(1, 0, 0, emptyList())
+            )
+        }
+        val vm = ShoppingListViewModel(household, stock, shopping)
+        vm.onAutoEntryToggle("a")
+
+        val manualVm = makeManualEntryViewModel(hid)
+        compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm) }
+        compose.onNodeWithTag("overflow").performClick()
+        compose.onNodeWithTag("menu_finish_shopping").performClick()
+        compose.onNodeWithTag("confirm_finish").performClick()
+
+        advanceUntilIdle()
+
+        coVerify { shopping.finishShopping(eq("HH"), match { plan ->
+            plan.restocks.singleOrNull()?.itemId == "a" && plan.restocks.single().newQuantity == 4.0
+        }) }
     }
 }

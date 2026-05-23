@@ -85,7 +85,10 @@ class ShoppingListViewModel @Inject constructor(
 
     fun consumeReport() { pendingReport.value = null }
     fun showSkipped() { skippedDialogVisible.value = true }
-    fun dismissSkipped() { skippedDialogVisible.value = false }
+    fun dismissSkipped() {
+        skippedDialogVisible.value = false
+        pendingReport.value = null
+    }
 
     // ------------------------------- pure helpers -------------------------------
 
