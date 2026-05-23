@@ -6,7 +6,12 @@ import kotlinx.coroutines.flow.Flow
 interface HouseholdRepository {
     fun observe(householdId: String): Flow<Household?>
     fun observeUserHouseholds(uid: String): Flow<List<Household>>
-    suspend fun create(name: String, ownerUid: String): Result<Household>
+    suspend fun create(
+        name: String,
+        ownerUid: String,
+        ownerDisplayName: String,
+        ownerEmail: String,
+    ): Result<Household>
     suspend fun rename(householdId: String, newName: String): Result<Unit>
     suspend fun regenerateInviteCode(householdId: String): Result<String>
 }

@@ -45,10 +45,15 @@ class HouseholdOnboardingViewModel @Inject constructor(
     fun submitCreate() {
         val s = _state.value
         if (!s.canSubmitCreate) return
-        val uid = auth.currentUser.value?.uid ?: return
+        val profile = auth.currentUser.value ?: return
         _state.update { it.copy(isSubmitting = true, toast = null) }
         viewModelScope.launch {
-            households.create(s.householdName.trim(), uid).fold(
+            households.create(
+                name = s.householdName.trim(),
+                ownerUid = profile.uid,
+                ownerDisplayName = profile.displayName,
+                ownerEmail = profile.email,
+            ).fold(
                 onSuccess = { _state.update { it.copy(isSubmitting = false, navigateToHome = true) } },
                 onFailure = { e -> _state.update { it.copy(isSubmitting = false, toast = e.message ?: "Failed to create household") } },
             )

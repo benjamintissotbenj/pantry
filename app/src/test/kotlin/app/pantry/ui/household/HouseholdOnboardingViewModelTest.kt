@@ -43,8 +43,8 @@ class HouseholdOnboardingViewModelTest {
 
     @Test
     fun `create flow navigates to home on success`() = runTest {
-        coEvery { householdRepo.create("Casa", "u-1") } returns Result.success(
-            Household(id = "h-1", name = "Casa", memberUids = listOf("u-1"), inviteCode = "ABCDEF", createdBy = "", members = emptyMap())
+        coEvery { householdRepo.create("Casa", "u-1", "Alice", "a@b.com") } returns Result.success(
+            Household(id = "h-1", name = "Casa", memberUids = listOf("u-1"), inviteCode = "ABCDEF", createdBy = "u-1", members = emptyMap())
         )
         vm.switchMode(HouseholdOnboardingUiState.Mode.Create)
         vm.onNameChange("Casa")
@@ -54,7 +54,7 @@ class HouseholdOnboardingViewModelTest {
 
     @Test
     fun `create flow shows toast and clears submitting on failure`() = runTest {
-        coEvery { householdRepo.create("Casa", "u-1") } returns Result.failure(Exception("Network error"))
+        coEvery { householdRepo.create("Casa", "u-1", "Alice", "a@b.com") } returns Result.failure(Exception("Network error"))
         vm.switchMode(HouseholdOnboardingUiState.Mode.Create)
         vm.onNameChange("Casa")
         vm.submitCreate()

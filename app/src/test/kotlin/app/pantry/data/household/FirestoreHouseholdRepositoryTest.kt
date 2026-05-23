@@ -37,7 +37,7 @@ class FirestoreHouseholdRepositoryTest {
         every { householdsCol.document() } returns newDoc
         every { firestore.runBatch(any()) } returns Tasks.forResult(null)
 
-        val result = repo.create("Casa", ownerUid = "u-1")
+        val result = repo.create("Casa", ownerUid = "u-1", ownerDisplayName = "Test User", ownerEmail = "test@example.com")
 
         assertTrue(result.isSuccess)
         assertEquals("h-new", result.getOrThrow().id)

@@ -1,6 +1,7 @@
 package app.pantry.data.household
 
 import app.pantry.domain.model.Household
+import app.pantry.domain.model.MemberSummary
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -42,7 +43,12 @@ class FirestoreHouseholdRepository @Inject constructor(
     // for non-members. With 36^6 ≈ 2.2B possible codes, accidental collisions for a
     // personal-scale app are vanishingly rare; if uniqueness ever matters strictly, add
     // a Cloud Function that runs the check with admin privileges.
-    override suspend fun create(name: String, ownerUid: String): Result<Household> = runCatching {
+    override suspend fun create(
+        name: String,
+        ownerUid: String,
+        ownerDisplayName: String,
+        ownerEmail: String,
+    ): Result<Household> = runCatching {
         val code = codes.next()
         val doc = firestore.collection("households").document()
         val data = mapOf(
@@ -51,6 +57,12 @@ class FirestoreHouseholdRepository @Inject constructor(
             "inviteCode" to code,
             "createdAt" to FieldValue.serverTimestamp(),
             "createdBy" to ownerUid,
+            "members" to mapOf(
+                ownerUid to mapOf(
+                    "displayName" to ownerDisplayName,
+                    "email" to ownerEmail,
+                ),
+            ),
         )
         firestore.runBatch { batch ->
             batch.set(doc, data)
@@ -60,7 +72,14 @@ class FirestoreHouseholdRepository @Inject constructor(
                 SetOptions.merge(),
             )
         }.await()
-        Household(id = doc.id, name = name, memberUids = listOf(ownerUid), inviteCode = code, createdBy = ownerUid, members = emptyMap())
+        Household(
+            id = doc.id,
+            name = name,
+            memberUids = listOf(ownerUid),
+            inviteCode = code,
+            createdBy = ownerUid,
+            members = mapOf(ownerUid to MemberSummary(ownerDisplayName, ownerEmail)),
+        )
     }
 
     override suspend fun rename(householdId: String, newName: String): Result<Unit> = runCatching {
@@ -76,14 +95,23 @@ class FirestoreHouseholdRepository @Inject constructor(
     private fun DocumentSnapshot.toHousehold(): Household? {
         if (!exists()) return null
         @Suppress("UNCHECKED_CAST")
-        val members = (get("memberUids") as? List<String>).orEmpty()
+        val memberUids = (get("memberUids") as? List<String>).orEmpty()
+        val createdBy = getString("createdBy").orEmpty()
+        @Suppress("UNCHECKED_CAST")
+        val rawMembers = (get("members") as? Map<String, Map<String, Any?>>).orEmpty()
+        val members = rawMembers.mapValues { (_, m) ->
+            MemberSummary(
+                displayName = m["displayName"] as? String ?: "",
+                email = m["email"] as? String ?: "",
+            )
+        }
         return Household(
             id = id,
             name = getString("name").orEmpty(),
-            memberUids = members,
+            memberUids = memberUids,
             inviteCode = getString("inviteCode").orEmpty(),
-            createdBy = getString("createdBy").orEmpty(),
-            members = emptyMap(),
+            createdBy = createdBy,
+            members = members,
         )
     }
 
