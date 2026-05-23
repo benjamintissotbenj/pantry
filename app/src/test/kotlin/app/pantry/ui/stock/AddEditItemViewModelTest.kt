@@ -163,4 +163,34 @@ class AddEditItemViewModelTest {
         vm.onDefaultRestockQuantityChange("abc")
         assertFalse(vm.uiState.value.canSubmit)
     }
+
+    @Test
+    fun `beginEdit formats non-null default restock quantity into UI string`() = runTest {
+        val vm = AddEditItemViewModel(ch, stock)
+        vm.beginEdit(
+            itemId = "x",
+            name = "Milk",
+            quantity = 0.0,
+            unit = StockUnit.COUNT,
+            threshold = 2.0,
+            category = "Dairy",
+            defaultRestockQuantity = 3.5,
+        )
+        assertEquals("3.5", vm.uiState.value.defaultRestockQuantity)
+    }
+
+    @Test
+    fun `beginEdit formats whole-number default restock quantity without decimal`() = runTest {
+        val vm = AddEditItemViewModel(ch, stock)
+        vm.beginEdit(
+            itemId = "x",
+            name = "Milk",
+            quantity = 0.0,
+            unit = StockUnit.COUNT,
+            threshold = 2.0,
+            category = "Dairy",
+            defaultRestockQuantity = 4.0,
+        )
+        assertEquals("4", vm.uiState.value.defaultRestockQuantity)
+    }
 }
