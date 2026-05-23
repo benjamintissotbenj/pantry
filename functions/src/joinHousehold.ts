@@ -35,8 +35,14 @@ export const joinHousehold = onCall<Payload>(
       throw new HttpsError("already-exists", "Already a member");
 
     await db.runTransaction(async (tx) => {
+      const userDoc = await tx.get(db.collection("users").doc(uid));
+      const displayName = (userDoc.get("displayName") as string | undefined) ?? "";
+      const email = (userDoc.get("email") as string | undefined) ?? "";
+
+      const memberPath = `members.${uid}`;
       tx.update(householdDoc.ref, {
         memberUids: admin.firestore.FieldValue.arrayUnion(uid),
+        [memberPath]: { displayName, email },
       });
       tx.set(
         db.collection("users").doc(uid),
