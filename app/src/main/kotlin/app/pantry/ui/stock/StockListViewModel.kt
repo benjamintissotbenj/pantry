@@ -2,6 +2,7 @@ package app.pantry.ui.stock
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.pantry.data.connectivity.ConnectivityRepository
 import app.pantry.data.household.CurrentHouseholdRepository
 import app.pantry.data.stock.StockItemRepository
 import app.pantry.domain.model.StockItem
@@ -9,12 +10,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -22,10 +24,16 @@ import kotlinx.coroutines.launch
 class StockListViewModel @Inject constructor(
     private val currentHousehold: CurrentHouseholdRepository,
     private val stock: StockItemRepository,
+    private val connectivity: ConnectivityRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(StockListUiState())
-    val uiState: StateFlow<StockListUiState> = _state.asStateFlow()
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val uiState: StateFlow<StockListUiState> =
+        combine(_state, connectivity.isOffline) { state, offline ->
+            state.copy(isOffline = offline)
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, StockListUiState())
 
     init {
         @OptIn(ExperimentalCoroutinesApi::class)
@@ -38,7 +46,7 @@ class StockListViewModel @Inject constructor(
                 .catch { e ->
                     _state.update { it.copy(isLoading = false, errorMessage = e.message ?: "Failed to load stock") }
                 }
-                .collectLatest { items ->
+                .collect { items ->
                     _state.update { it.copy(isLoading = false, allItems = items, errorMessage = null) }
                 }
         }

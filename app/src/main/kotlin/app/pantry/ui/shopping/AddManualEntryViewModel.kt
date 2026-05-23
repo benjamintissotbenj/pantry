@@ -2,6 +2,7 @@ package app.pantry.ui.shopping
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.pantry.data.connectivity.ConnectivityRepository
 import app.pantry.data.household.CurrentHouseholdRepository
 import app.pantry.data.shopping.ShoppingEntryRepository
 import app.pantry.data.stock.StockItemRepository
@@ -24,6 +25,7 @@ class AddManualEntryViewModel @Inject constructor(
     private val currentHousehold: CurrentHouseholdRepository,
     private val stock: StockItemRepository,
     private val shopping: ShoppingEntryRepository,
+    private val connectivity: ConnectivityRepository,
 ) : ViewModel() {
 
     private val internalState = MutableStateFlow(AddManualEntryUiState())
@@ -34,7 +36,8 @@ class AddManualEntryViewModel @Inject constructor(
             currentHousehold.currentHouseholdId.flatMapLatest { hid ->
                 if (hid == null) flowOf(emptyList()) else stock.observe(hid)
             },
-        ) { state, items ->
+            connectivity.isOffline,
+        ) { state, items, offline ->
             val q = state.query.trim()
             val suggestions = if (q.isBlank()) emptyList() else
                 items.asSequence()
@@ -42,7 +45,7 @@ class AddManualEntryViewModel @Inject constructor(
                     .take(8)
                     .map { AddManualEntryUiState.Suggestion(it.id, it.name) }
                     .toList()
-            state.copy(suggestions = suggestions)
+            state.copy(suggestions = suggestions, isOffline = offline)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AddManualEntryUiState())
 
     fun onQueryChange(q: String) {

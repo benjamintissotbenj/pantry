@@ -3,7 +3,6 @@ package app.pantry.ui.shopping
 import app.pantry.domain.model.ShoppingEntry
 
 data class ShoppingListUiState(
-    // TODO(phase-4): wire to ConnectivityRepository when it is introduced.
     val isOffline: Boolean = false,
     val isLoading: Boolean = true,
     val runningLow: List<CategorySubgroup> = emptyList(),

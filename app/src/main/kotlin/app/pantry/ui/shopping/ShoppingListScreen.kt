@@ -52,6 +52,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.pantry.domain.model.ShoppingEntry
+import app.pantry.ui.common.OfflineBanner
 import app.pantry.ui.stock.AddEditItemBottomSheet
 import app.pantry.ui.stock.AddEditItemViewModel
 import kotlinx.coroutines.launch
@@ -103,7 +104,7 @@ fun ShoppingListScreen(
             Surface(tonalElevation = 3.dp) {
                 Button(
                     onClick = { confirmFinish = true },
-                    enabled = state.canFinish && (actionable > 0 || preview.skipCount > 0),
+                    enabled = !state.isOffline && state.canFinish && (actionable > 0 || preview.skipCount > 0),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
@@ -115,7 +116,7 @@ fun ShoppingListScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { showAddManual = true },
+                onClick = { if (!state.isOffline) showAddManual = true },
                 modifier = Modifier.testTag("fab_add_manual"),
             ) { Icon(Icons.Default.Add, contentDescription = "Add manual entry") }
         },
@@ -123,44 +124,47 @@ fun ShoppingListScreen(
         if (state.isEmpty) {
             EmptyState(Modifier.padding(padding))
         } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                contentPadding = PaddingValues(vertical = 8.dp),
-            ) {
-                if (state.runningLow.isNotEmpty()) {
-                    item { SectionHeader("Running low") }
-                    for (sub in state.runningLow) {
-                        item { CategorySubHeader(sub.category) }
-                        items(sub.entries, key = { it.id }) { entry ->
-                            EntryRow(
-                                entry = entry,
-                                boughtQuantity = state.boughtQuantities[entry.id] ?: "",
-                                onCheckedChange = { checked ->
-                                    if (entry.source == ShoppingEntry.Source.AUTO) {
-                                        entry.linkedItemId?.let(viewModel::onAutoEntryToggle)
-                                    } else {
-                                        viewModel.onManualEntryToggle(entry.id, checked)
-                                    }
-                                },
-                                onQuantityChange = { v -> viewModel.onQuantityChange(entry.id, v) },
-                            )
+            androidx.compose.foundation.layout.Column(Modifier.fillMaxSize().padding(padding)) {
+                OfflineBanner(isOffline = state.isOffline)
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    contentPadding = PaddingValues(vertical = 8.dp),
+                ) {
+                    if (state.runningLow.isNotEmpty()) {
+                        item { SectionHeader("Running low") }
+                        for (sub in state.runningLow) {
+                            item { CategorySubHeader(sub.category) }
+                            items(sub.entries, key = { it.id }) { entry ->
+                                EntryRow(
+                                    entry = entry,
+                                    boughtQuantity = state.boughtQuantities[entry.id] ?: "",
+                                    onCheckedChange = { checked ->
+                                        if (entry.source == ShoppingEntry.Source.AUTO) {
+                                            entry.linkedItemId?.let(viewModel::onAutoEntryToggle)
+                                        } else {
+                                            viewModel.onManualEntryToggle(entry.id, checked)
+                                        }
+                                    },
+                                    onQuantityChange = { v -> viewModel.onQuantityChange(entry.id, v) },
+                                )
+                            }
                         }
                     }
-                }
-                if (state.manual.isNotEmpty()) {
-                    item { SectionHeader("Added manually") }
-                    for (sub in state.manual) {
-                        item { CategorySubHeader(sub.category) }
-                        items(sub.entries, key = { it.id }) { entry ->
-                            EntryRow(
-                                entry = entry,
-                                boughtQuantity = state.boughtQuantities[entry.id] ?: "",
-                                onCheckedChange = { checked ->
-                                    viewModel.onManualEntryToggle(entry.id, checked)
-                                },
-                                onQuantityChange = { v -> viewModel.onQuantityChange(entry.id, v) },
-                            )
+                    if (state.manual.isNotEmpty()) {
+                        item { SectionHeader("Added manually") }
+                        for (sub in state.manual) {
+                            item { CategorySubHeader(sub.category) }
+                            items(sub.entries, key = { it.id }) { entry ->
+                                EntryRow(
+                                    entry = entry,
+                                    boughtQuantity = state.boughtQuantities[entry.id] ?: "",
+                                    onCheckedChange = { checked ->
+                                        viewModel.onManualEntryToggle(entry.id, checked)
+                                    },
+                                    onQuantityChange = { v -> viewModel.onQuantityChange(entry.id, v) },
+                                )
+                            }
                         }
                     }
                 }

@@ -3,6 +3,7 @@ package app.pantry.ui.stock
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import app.pantry.data.connectivity.ConnectivityRepository
 import app.pantry.data.household.CurrentHouseholdRepository
 import app.pantry.data.stock.StockItemRepository
 import app.pantry.domain.model.StockItem
@@ -26,6 +27,10 @@ class LowStockBadgeTest {
 
     private val now = Instant.parse("2026-06-01T10:00:00Z")
 
+    private fun fakeConnectivity() = mockk<ConnectivityRepository>().also {
+        every { it.isOffline } returns MutableStateFlow(false)
+    }
+
     @Test
     fun shows_low_stock_badge_when_below_threshold() {
         // quantity 0.5, threshold 1.0 → low and non-zero → badge expected
@@ -37,7 +42,7 @@ class LowStockBadgeTest {
         }
         composeRule.setContent {
             StockListScreen(
-                viewModel = StockListViewModel(ch, stock),
+                viewModel = StockListViewModel(ch, stock, fakeConnectivity()),
                 sheetViewModel = sheetVm,
             )
         }
@@ -55,7 +60,7 @@ class LowStockBadgeTest {
         }
         composeRule.setContent {
             StockListScreen(
-                viewModel = StockListViewModel(ch, stock),
+                viewModel = StockListViewModel(ch, stock, fakeConnectivity()),
                 sheetViewModel = sheetVm,
             )
         }

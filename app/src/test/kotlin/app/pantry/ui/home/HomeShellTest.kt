@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import app.pantry.data.connectivity.ConnectivityRepository
 import app.pantry.data.household.CurrentHouseholdRepository
 import app.pantry.data.shopping.ShoppingEntryRepository
 import app.pantry.data.stock.StockItemRepository
@@ -31,16 +32,20 @@ class HomeShellTest {
 
     @get:Rule val composeRule = createComposeRule()
 
+    private fun fakeConnectivity() = mockk<ConnectivityRepository>().also {
+        every { it.isOffline } returns MutableStateFlow(false)
+    }
+
     private fun makeStockVm(): StockListViewModel {
         val ch: CurrentHouseholdRepository = mockk { every { currentHouseholdId } returns MutableStateFlow("h-1") }
         val stock: StockItemRepository = mockk { every { observe("h-1") } returns flowOf(emptyList()) }
-        return StockListViewModel(ch, stock)
+        return StockListViewModel(ch, stock, fakeConnectivity())
     }
 
     private fun makeSheetVm(): AddEditItemViewModel {
         val ch: CurrentHouseholdRepository = mockk { every { currentHouseholdId } returns MutableStateFlow("h-1") }
         val stock: StockItemRepository = mockk(relaxed = true)
-        return AddEditItemViewModel(ch, stock)
+        return AddEditItemViewModel(ch, stock, fakeConnectivity())
     }
 
     // The Stock tab now renders StockListScreen (US-7). To avoid Hilt in the compose rule,
@@ -56,14 +61,20 @@ class HomeShellTest {
         val ch: CurrentHouseholdRepository = mockk { every { currentHouseholdId } returns MutableStateFlow(null) }
         val stock: StockItemRepository = mockk { coEvery { observe(any()) } returns flowOf(emptyList()) }
         val shopping: ShoppingEntryRepository = mockk(relaxed = true)
-        return ShoppingListViewModel(ch, stock, shopping)
+        return ShoppingListViewModel(ch, stock, shopping, fakeConnectivity())
     }
 
     private fun makeAddManualVm(): AddManualEntryViewModel {
         val ch: CurrentHouseholdRepository = mockk { every { currentHouseholdId } returns MutableStateFlow(null) }
         val stock: StockItemRepository = mockk { coEvery { observe(any()) } returns flowOf(emptyList()) }
         val shopping: ShoppingEntryRepository = mockk(relaxed = true)
-        return AddManualEntryViewModel(ch, stock, shopping)
+        return AddManualEntryViewModel(ch, stock, shopping, fakeConnectivity())
+    }
+
+    private fun makePromoteItemVm(): AddEditItemViewModel {
+        val ch: CurrentHouseholdRepository = mockk { every { currentHouseholdId } returns MutableStateFlow(null) }
+        val stock: StockItemRepository = mockk(relaxed = true)
+        return AddEditItemViewModel(ch, stock, fakeConnectivity())
     }
 
     @Test
@@ -74,6 +85,7 @@ class HomeShellTest {
                 ShoppingListScreen(
                     viewModel = makeShoppingVm(),
                     manualEntryViewModel = makeAddManualVm(),
+                    promoteItemViewModel = makePromoteItemVm(),
                 )
             }
         }

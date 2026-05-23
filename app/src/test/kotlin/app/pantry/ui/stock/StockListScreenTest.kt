@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import app.pantry.data.connectivity.ConnectivityRepository
 import app.pantry.data.household.CurrentHouseholdRepository
 import app.pantry.data.stock.StockItemRepository
 import app.pantry.domain.model.StockItem
@@ -27,16 +28,20 @@ class StockListScreenTest {
 
     private val now = Instant.parse("2026-06-01T10:00:00Z")
 
+    private fun fakeConnectivity() = mockk<ConnectivityRepository>().also {
+        every { it.isOffline } returns MutableStateFlow(false)
+    }
+
     private fun makeVm(items: List<StockItem>): StockListViewModel {
         val ch: CurrentHouseholdRepository = mockk { every { currentHouseholdId } returns MutableStateFlow("h-1") }
         val stock: StockItemRepository = mockk { every { observe("h-1") } returns flowOf(items) }
-        return StockListViewModel(ch, stock)
+        return StockListViewModel(ch, stock, fakeConnectivity())
     }
 
     private fun makeSheetVm(): AddEditItemViewModel {
         val ch: CurrentHouseholdRepository = mockk { every { currentHouseholdId } returns MutableStateFlow("h-1") }
         val stock: StockItemRepository = mockk(relaxed = true)
-        return AddEditItemViewModel(ch, stock)
+        return AddEditItemViewModel(ch, stock, fakeConnectivity())
     }
 
     @Test

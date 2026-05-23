@@ -1,6 +1,7 @@
 package app.pantry.ui.shopping
 
 import app.cash.turbine.test
+import app.pantry.data.connectivity.ConnectivityRepository
 import app.pantry.data.household.CurrentHouseholdRepository
 import app.pantry.data.shopping.FinishShoppingPlan
 import app.pantry.data.shopping.FinishShoppingReport as DataReport
@@ -32,6 +33,9 @@ class ShoppingListViewModelTest {
     private val hidFlow = MutableStateFlow<String?>("HH")
     private val household = mockk<CurrentHouseholdRepository>(relaxed = true).also {
         every { it.currentHouseholdId } returns hidFlow
+    }
+    private val connectivity = mockk<ConnectivityRepository>().also {
+        every { it.isOffline } returns MutableStateFlow(false)
     }
 
     @BeforeEach
@@ -69,7 +73,7 @@ class ShoppingListViewModelTest {
         val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(items) }
         val shopping = mockk<ShoppingEntryRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
 
-        val vm = ShoppingListViewModel(household, stock, shopping)
+        val vm = ShoppingListViewModel(household, stock, shopping, connectivity)
 
         vm.uiState.test {
             val s = awaitItem()
@@ -92,7 +96,7 @@ class ShoppingListViewModelTest {
         )
         val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(items) }
         val shopping = mockk<ShoppingEntryRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
-        val vm = ShoppingListViewModel(household, stock, shopping)
+        val vm = ShoppingListViewModel(household, stock, shopping, connectivity)
 
         vm.uiState.test {
             var s = awaitItem(); if (s.isLoading) s = awaitItem()
@@ -120,7 +124,7 @@ class ShoppingListViewModelTest {
         val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
         val shopping = mockk<ShoppingEntryRepository>().also { coEvery { it.observe(any()) } returns flowOf(manual) }
 
-        val vm = ShoppingListViewModel(household, stock, shopping)
+        val vm = ShoppingListViewModel(household, stock, shopping, connectivity)
 
         vm.uiState.test {
             var s = awaitItem(); if (s.isLoading) s = awaitItem()
@@ -180,7 +184,7 @@ class ShoppingListViewModelTest {
         val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(items) }
         val shopping = mockk<ShoppingEntryRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
 
-        val vm = ShoppingListViewModel(household, stock, shopping)
+        val vm = ShoppingListViewModel(household, stock, shopping, connectivity)
 
         vm.uiState.test {
             var s = awaitItem()
@@ -211,7 +215,7 @@ class ShoppingListViewModelTest {
                 )
             )
         }
-        val vm = ShoppingListViewModel(household, stock, shopping)
+        val vm = ShoppingListViewModel(household, stock, shopping, connectivity)
 
         // Check item "a" so the plan has work to do.
         vm.onAutoEntryToggle("a")
@@ -236,7 +240,7 @@ class ShoppingListViewModelTest {
         val shopping = mockk<ShoppingEntryRepository>().also {
             coEvery { it.observe(any()) } returns flowOf(emptyList())
         }
-        val vm = ShoppingListViewModel(household, stock, shopping)
+        val vm = ShoppingListViewModel(household, stock, shopping, connectivity)
 
         vm.onAutoEntryToggle("a")
 
@@ -262,7 +266,7 @@ class ShoppingListViewModelTest {
         val shopping = mockk<ShoppingEntryRepository>(relaxed = true).also {
             coEvery { it.observe(any()) } returns flowOf(manual)
         }
-        val vm = ShoppingListViewModel(household, stock, shopping)
+        val vm = ShoppingListViewModel(household, stock, shopping, connectivity)
         vm.onManualEntryToggle("e1", true)
         advanceUntilIdle()
         coVerify { shopping.setChecked("HH", "e1", true) }
@@ -295,7 +299,7 @@ class ShoppingListViewModelTest {
         val items = listOf(item("a", "Milk", quantity = 0.0, threshold = 2.0, drq = null))
         val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(items) }
         val shopping = mockk<ShoppingEntryRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
-        val vm = ShoppingListViewModel(household, stock, shopping)
+        val vm = ShoppingListViewModel(household, stock, shopping, connectivity)
         vm.onAutoEntryToggle("a")
 
         vm.uiState.test {
@@ -311,7 +315,7 @@ class ShoppingListViewModelTest {
     private fun vmEmpty(): ShoppingListViewModel {
         val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
         val shopping = mockk<ShoppingEntryRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
-        return ShoppingListViewModel(household, stock, shopping)
+        return ShoppingListViewModel(household, stock, shopping, connectivity)
     }
 
     private fun mkEntry(

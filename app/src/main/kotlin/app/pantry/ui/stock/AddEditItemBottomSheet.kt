@@ -64,6 +64,7 @@ fun AddEditItemBottomSheet(
                 if (state.mode == AddEditItemUiState.Mode.Edit) {
                     TextButton(
                         onClick = { confirmDelete = true },
+                        enabled = !state.isOffline,
                         modifier = Modifier.testTag("item_delete"),
                     ) { Text("Delete") }
                 }
@@ -146,7 +147,7 @@ fun AddEditItemBottomSheet(
 
             Button(
                 onClick = viewModel::submit,
-                enabled = state.canSubmit,
+                enabled = !state.isOffline && state.canSubmit,
                 modifier = Modifier.fillMaxWidth().testTag("item_save"),
             ) { Text(if (state.isSubmitting) "Saving…" else "Save") }
         }
