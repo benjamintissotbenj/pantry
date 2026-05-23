@@ -172,6 +172,61 @@ class ShoppingListViewModelTest {
         assertEquals("x", plan.restocks[0].itemId)
     }
 
+    @Test
+    fun `toggling auto entry updates checked flag in uiState`() = runTest {
+        val items = listOf(item("a", "Milk", category = "Dairy"))
+        val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(items) }
+        val shopping = mockk<ShoppingEntryRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
+
+        val vm = ShoppingListViewModel(household, stock, shopping)
+
+        vm.uiState.test {
+            var s = awaitItem()
+            // Wait until the projection settles to a non-loading state with an entry.
+            while (s.isLoading || s.runningLow.isEmpty()) s = awaitItem()
+            assertEquals(false, s.runningLow[0].entries[0].checked)
+
+            vm.onAutoEntryToggle("a")
+            val toggled = awaitItem()
+            assertEquals(true, toggled.runningLow[0].entries[0].checked)
+
+            cancelAndConsumeRemainingEvents()
+        }
+    }
+
+    @Test
+    fun `onFinishShopping success populates pendingReport in uiState`() = runTest {
+        val items = listOf(item("a", "Milk", quantity = 0.0, threshold = 2.0, drq = 4.0))
+        val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(items) }
+        val shopping = mockk<ShoppingEntryRepository>(relaxed = true).also {
+            coEvery { it.observe(any()) } returns flowOf(emptyList())
+            coEvery { it.finishShopping(any(), any()) } returns Result.success(
+                app.pantry.data.shopping.FinishShoppingReport(
+                    restockedCount = 1,
+                    clearedCount = 0,
+                    skippedCount = 0,
+                    skippedNames = emptyList(),
+                )
+            )
+        }
+        val vm = ShoppingListViewModel(household, stock, shopping)
+
+        // Check item "a" so the plan has work to do.
+        vm.onAutoEntryToggle("a")
+
+        vm.uiState.test {
+            var s = awaitItem(); while (s.isLoading || s.runningLow.isEmpty()) s = awaitItem()
+            var done = false
+            vm.onFinishShopping { done = true }
+            // After commit, an emission should arrive with pendingReport non-null.
+            var post = awaitItem()
+            while (post.pendingReport == null) post = awaitItem()
+            assertEquals(1, post.pendingReport!!.restockedCount)
+            assertEquals(true, done)
+            cancelAndConsumeRemainingEvents()
+        }
+    }
+
     private fun vmEmpty(): ShoppingListViewModel {
         val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
         val shopping = mockk<ShoppingEntryRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
