@@ -80,6 +80,26 @@ class AddManualEntryViewModelTest {
     }
 
     @Test
+    fun `onUnlink clears the link`() = runTest {
+        val items = listOf(StockItem("a", "Wine", "Other", StockUnit.COUNT, 0.0, 1.0, Instant.now(), null))
+        val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(items) }
+        val shopping = mockk<ShoppingEntryRepository>(relaxed = true)
+        val vm = AddManualEntryViewModel(household, stock, shopping)
+
+        vm.onPickSuggestion(AddManualEntryUiState.Suggestion("a", "Wine"))
+        vm.onUnlink()
+
+        vm.uiState.test {
+            var s = awaitItem(); while (s.linkedItemId != null) s = awaitItem()
+            assertNull(s.linkedItemId)
+            assertNull(s.linkedItemName)
+            // Query stays as "Wine" — onUnlink should only clear the link, not the text the user already has.
+            assertEquals("Wine", s.query)
+            cancelAndConsumeRemainingEvents()
+        }
+    }
+
+    @Test
     fun `editing query after pick clears the link`() = runTest {
         val items = listOf(StockItem("a", "Wine", "Other", StockUnit.COUNT, 0.0, 1.0, Instant.now(), null))
         val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(items) }
