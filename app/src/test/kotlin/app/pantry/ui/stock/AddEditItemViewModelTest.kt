@@ -35,7 +35,7 @@ class AddEditItemViewModelTest {
 
     @Test
     fun `add path submits and dismisses on success`() = runTest {
-        coEvery { stock.create("h-1", "Milk", "Fridge", StockUnit.LITER, 1.5, 1.0) } returns
+        coEvery { stock.create("h-1", "Milk", "Fridge", StockUnit.LITER, 1.5, 1.0, null) } returns
             Result.success(StockItem("i-1", "Milk", "Fridge", StockUnit.LITER, 1.5, 1.0, Instant.now(), null))
         val vm = AddEditItemViewModel(ch, stock)
         vm.beginAdd()
@@ -52,7 +52,7 @@ class AddEditItemViewModelTest {
 
     @Test
     fun `add path surfaces toast on failure`() = runTest {
-        coEvery { stock.create(any(), any(), any(), any(), any(), any()) } returns
+        coEvery { stock.create(any(), any(), any(), any(), any(), any(), any()) } returns
             Result.failure(RuntimeException("network"))
         val vm = AddEditItemViewModel(ch, stock)
         vm.beginAdd()
@@ -73,12 +73,12 @@ class AddEditItemViewModelTest {
         vm.onThresholdChange("1")
         vm.submit()
         advanceUntilIdle()
-        coVerify(exactly = 0) { stock.create(any(), any(), any(), any(), any(), any()) }
+        coVerify(exactly = 0) { stock.create(any(), any(), any(), any(), any(), any(), any()) }
     }
 
     @Test
     fun `edit path submits update and dismisses`() = runTest {
-        coEvery { stock.update("h-1", "i-1", "Milk", "Fridge", StockUnit.LITER, 0.5, 1.0) } returns
+        coEvery { stock.update("h-1", "i-1", "Milk", "Fridge", StockUnit.LITER, 0.5, 1.0, null) } returns
             Result.success(Unit)
         val vm = AddEditItemViewModel(ch, stock)
         vm.beginEdit(

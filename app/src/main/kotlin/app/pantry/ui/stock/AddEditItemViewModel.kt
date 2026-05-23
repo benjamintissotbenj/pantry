@@ -69,6 +69,7 @@ class AddEditItemViewModel @Inject constructor(
                     unit = s.unit,
                     quantity = s.quantity.toDoubleOrNull() ?: 0.0,
                     threshold = s.threshold.toDoubleOrNull() ?: 1.0,
+                    defaultRestockQuantity = null,
                 ).map { Unit }
             } else {
                 stock.update(
@@ -79,6 +80,7 @@ class AddEditItemViewModel @Inject constructor(
                     unit = s.unit,
                     quantity = s.quantity.toDoubleOrNull() ?: 0.0,
                     threshold = s.threshold.toDoubleOrNull() ?: 1.0,
+                    defaultRestockQuantity = null,
                 )
             }
             result.fold(

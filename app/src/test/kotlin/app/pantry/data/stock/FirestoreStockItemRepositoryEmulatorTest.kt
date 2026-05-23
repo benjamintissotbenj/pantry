@@ -60,6 +60,7 @@ class FirestoreStockItemRepositoryEmulatorTest {
             unit = StockUnit.LITER,
             quantity = 1.0,
             threshold = 1.0,
+            defaultRestockQuantity = null,
         )
         assertNotNull(created.getOrNull())
         val itemId = created.getOrThrow().id
