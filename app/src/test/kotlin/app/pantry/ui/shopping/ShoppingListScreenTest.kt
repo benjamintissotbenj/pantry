@@ -22,6 +22,13 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
+private fun makeManualEntryViewModel(hid: MutableStateFlow<String?>): AddManualEntryViewModel {
+    val household = mockk<CurrentHouseholdRepository>().also { every { it.currentHouseholdId } returns hid }
+    val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
+    val shopping = mockk<ShoppingEntryRepository>(relaxed = true)
+    return AddManualEntryViewModel(household, stock, shopping)
+}
+
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34])
 class ShoppingListScreenTest {
@@ -49,8 +56,9 @@ class ShoppingListScreenTest {
         val shopping = mockk<ShoppingEntryRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
 
         val vm = ShoppingListViewModel(household, stock, shopping)
+        val manualVm = makeManualEntryViewModel(hid)
 
-        compose.setContent { ShoppingListScreen(viewModel = vm) }
+        compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm) }
 
         compose.onNodeWithTag("section_Running low").assertIsDisplayed()
         compose.onNodeWithTag("subheader_Dairy").assertIsDisplayed()
@@ -75,7 +83,8 @@ class ShoppingListScreenTest {
             )
         }
         val vm = ShoppingListViewModel(household, stock, shopping)
-        compose.setContent { ShoppingListScreen(viewModel = vm) }
+        val manualVm = makeManualEntryViewModel(hid)
+        compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm) }
 
         // Compose has no direct LineThrough matcher — verify the entry's row tag renders, which is the
         // wire we care about (the strike-through is a visual decoration we trust the Composable applies).
@@ -90,7 +99,8 @@ class ShoppingListScreenTest {
         val shopping = mockk<ShoppingEntryRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
 
         val vm = ShoppingListViewModel(household, stock, shopping)
-        compose.setContent { ShoppingListScreen(viewModel = vm) }
+        val manualVm = makeManualEntryViewModel(hid)
+        compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm) }
 
         compose.onNodeWithText("Nothing to buy").assertIsDisplayed()
     }

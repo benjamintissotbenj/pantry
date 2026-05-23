@@ -44,9 +44,11 @@ import app.pantry.domain.model.ShoppingEntry
 @Composable
 fun ShoppingListScreen(
     viewModel: ShoppingListViewModel = hiltViewModel(),
+    manualEntryViewModel: AddManualEntryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
     var overflowOpen by remember { mutableStateOf(false) }
+    var showAddManual by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -70,7 +72,7 @@ fun ShoppingListScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* wired in US-9 */ },
+                onClick = { showAddManual = true },
                 modifier = Modifier.testTag("fab_add_manual"),
             ) { Icon(Icons.Default.Add, contentDescription = "Add manual entry") }
         },
@@ -117,6 +119,13 @@ fun ShoppingListScreen(
                 }
             }
         }
+    }
+
+    if (showAddManual) {
+        AddManualEntryBottomSheet(
+            viewModel = manualEntryViewModel,
+            onDismiss = { showAddManual = false },
+        )
     }
 }
 
