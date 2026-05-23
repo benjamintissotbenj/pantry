@@ -55,6 +55,7 @@ class FirestoreStockItemRepository @Inject constructor(
             quantity = quantity,
             threshold = threshold,
             updatedAt = Instant.now(),
+            defaultRestockQuantity = null,
         )
     }
 
@@ -106,6 +107,7 @@ class FirestoreStockItemRepository @Inject constructor(
         val updatedAt = getTimestamp("updatedAt")
             ?.let { Instant.ofEpochSecond(it.seconds, it.nanoseconds.toLong()) }
             ?: Instant.EPOCH
+        val defaultRestockQuantity = if (contains("defaultRestockQuantity")) getDouble("defaultRestockQuantity") else null
         return StockItem(
             id = id,
             name = name,
@@ -114,6 +116,7 @@ class FirestoreStockItemRepository @Inject constructor(
             quantity = quantity,
             threshold = threshold,
             updatedAt = updatedAt,
+            defaultRestockQuantity = defaultRestockQuantity,
         )
     }
 }

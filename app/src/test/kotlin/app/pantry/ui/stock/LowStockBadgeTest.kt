@@ -29,7 +29,7 @@ class LowStockBadgeTest {
     @Test
     fun shows_low_stock_badge_when_below_threshold() {
         // quantity 0.5, threshold 1.0 → low and non-zero → badge expected
-        val item = StockItem("i-1", "Milk", "Fridge", StockUnit.LITER, 0.5, 1.0, now)
+        val item = StockItem("i-1", "Milk", "Fridge", StockUnit.LITER, 0.5, 1.0, now, null)
         val ch: CurrentHouseholdRepository = mockk { every { currentHouseholdId } returns MutableStateFlow("h-1") }
         val stock: StockItemRepository = mockk { every { observe("h-1") } returns flowOf(listOf(item)) }
         val sheetVm: AddEditItemViewModel = mockk(relaxed = true) {

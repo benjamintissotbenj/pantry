@@ -36,7 +36,7 @@ class AddEditItemViewModelTest {
     @Test
     fun `add path submits and dismisses on success`() = runTest {
         coEvery { stock.create("h-1", "Milk", "Fridge", StockUnit.LITER, 1.5, 1.0) } returns
-            Result.success(StockItem("i-1", "Milk", "Fridge", StockUnit.LITER, 1.5, 1.0, Instant.now()))
+            Result.success(StockItem("i-1", "Milk", "Fridge", StockUnit.LITER, 1.5, 1.0, Instant.now(), null))
         val vm = AddEditItemViewModel(ch, stock)
         vm.beginAdd()
         vm.onNameChange("Milk")

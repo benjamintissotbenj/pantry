@@ -30,7 +30,7 @@ class StockStepperTest {
 
     @Test
     fun plus_button_invokes_adjustQuantity() {
-        val items = listOf(StockItem("i-1", "Milk", "Fridge", StockUnit.LITER, 1.0, 1.0, now))
+        val items = listOf(StockItem("i-1", "Milk", "Fridge", StockUnit.LITER, 1.0, 1.0, now, null))
         val ch: CurrentHouseholdRepository = mockk { every { currentHouseholdId } returns MutableStateFlow("h-1") }
         val stock: StockItemRepository = mockk(relaxed = true) {
             every { observe("h-1") } returns flowOf(items)
