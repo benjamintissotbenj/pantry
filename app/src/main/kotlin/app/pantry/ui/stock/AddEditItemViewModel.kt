@@ -22,9 +22,15 @@ class AddEditItemViewModel @Inject constructor(
     private val _state = MutableStateFlow(AddEditItemUiState())
     val uiState: StateFlow<AddEditItemUiState> = _state.asStateFlow()
 
-    fun beginAdd(prefillCategory: String = "") {
+    fun beginAdd(
+        prefillName: String = "",
+        prefillQuantity: String = "",
+        prefillCategory: String = "",
+    ) {
         _state.value = AddEditItemUiState(
             mode = AddEditItemUiState.Mode.Add,
+            name = prefillName,
+            quantity = prefillQuantity,
             category = prefillCategory,
         )
     }

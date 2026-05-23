@@ -8,27 +8,28 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -43,10 +44,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.pantry.domain.model.ShoppingEntry
+import app.pantry.ui.stock.AddEditItemBottomSheet
+import app.pantry.ui.stock.AddEditItemViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,9 +58,9 @@ import kotlinx.coroutines.launch
 fun ShoppingListScreen(
     viewModel: ShoppingListViewModel = hiltViewModel(),
     manualEntryViewModel: AddManualEntryViewModel = hiltViewModel(),
+    promoteItemViewModel: AddEditItemViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
-    var overflowOpen by remember { mutableStateOf(false) }
     var showAddManual by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -78,27 +82,33 @@ fun ShoppingListScreen(
         }
     }
 
+    LaunchedEffect(state.pendingPromotion) {
+        state.pendingPromotion?.let { promo ->
+            promoteItemViewModel.beginAdd(
+                prefillName = promo.name,
+                prefillQuantity = formatQty(promo.quantity),
+            )
+        }
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = { Text("Shopping list") },
-                actions = {
-                    IconButton(
-                        onClick = { overflowOpen = true },
-                        modifier = Modifier.testTag("overflow"),
-                    ) { Icon(Icons.Default.MoreVert, contentDescription = "More") }
-                    DropdownMenu(expanded = overflowOpen, onDismissRequest = { overflowOpen = false }) {
-                        DropdownMenuItem(
-                            text = { Text("Finish shopping") },
-                            enabled = state.finishShoppingPreview.restockCount > 0
-                                || state.finishShoppingPreview.clearCount > 0,
-                            onClick = { overflowOpen = false; confirmFinish = true },
-                            modifier = Modifier.testTag("menu_finish_shopping"),
-                        )
-                    }
-                },
-            )
+        topBar = { TopAppBar(title = { Text("Shopping list") }) },
+        bottomBar = {
+            val preview = state.finishShoppingPreview
+            val actionable = preview.restockCount + preview.clearCount
+            Surface(tonalElevation = 3.dp) {
+                Button(
+                    onClick = { confirmFinish = true },
+                    enabled = state.canFinish && (actionable > 0 || preview.skipCount > 0),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .testTag("btn_finish_shopping"),
+                ) {
+                    Text(if (actionable > 0) "Finish shopping ($actionable)" else "Finish shopping")
+                }
+            }
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -122,6 +132,7 @@ fun ShoppingListScreen(
                         items(sub.entries, key = { it.id }) { entry ->
                             EntryRow(
                                 entry = entry,
+                                boughtQuantity = state.boughtQuantities[entry.id] ?: "",
                                 onCheckedChange = { checked ->
                                     if (entry.source == ShoppingEntry.Source.AUTO) {
                                         entry.linkedItemId?.let(viewModel::onAutoEntryToggle)
@@ -129,6 +140,7 @@ fun ShoppingListScreen(
                                         viewModel.onManualEntryToggle(entry.id, checked)
                                     }
                                 },
+                                onQuantityChange = { v -> viewModel.onQuantityChange(entry.id, v) },
                             )
                         }
                     }
@@ -140,9 +152,11 @@ fun ShoppingListScreen(
                         items(sub.entries, key = { it.id }) { entry ->
                             EntryRow(
                                 entry = entry,
+                                boughtQuantity = state.boughtQuantities[entry.id] ?: "",
                                 onCheckedChange = { checked ->
                                     viewModel.onManualEntryToggle(entry.id, checked)
                                 },
+                                onQuantityChange = { v -> viewModel.onQuantityChange(entry.id, v) },
                             )
                         }
                     }
@@ -198,6 +212,14 @@ fun ShoppingListScreen(
             },
         )
     }
+
+    if (state.pendingPromotion != null) {
+        AddEditItemBottomSheet(
+            viewModel = promoteItemViewModel,
+            existingCategories = state.existingCategories,
+            onDismiss = { viewModel.completePromotion() },
+        )
+    }
 }
 
 @Composable
@@ -226,7 +248,12 @@ private fun CategorySubHeader(category: String) {
 }
 
 @Composable
-private fun EntryRow(entry: ShoppingEntry, onCheckedChange: (Boolean) -> Unit) {
+private fun EntryRow(
+    entry: ShoppingEntry,
+    boughtQuantity: String,
+    onCheckedChange: (Boolean) -> Unit,
+    onQuantityChange: (String) -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -253,7 +280,20 @@ private fun EntryRow(entry: ShoppingEntry, onCheckedChange: (Boolean) -> Unit) {
                 )
             }
         }
-        if (entry.source == ShoppingEntry.Source.AUTO && entry.threshold != null && entry.currentQuantity != null) {
+        if (entry.checked) {
+            val placeholder = entry.defaultRestockQuantity?.let { formatQty(it) } ?: "0"
+            OutlinedTextField(
+                value = boughtQuantity,
+                onValueChange = onQuantityChange,
+                singleLine = true,
+                placeholder = { Text(placeholder, style = MaterialTheme.typography.bodySmall) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier
+                    .width(72.dp)
+                    .padding(end = 8.dp)
+                    .testTag("qty_${entry.id}"),
+            )
+        } else if (entry.source == ShoppingEntry.Source.AUTO && entry.threshold != null && entry.currentQuantity != null) {
             Text(
                 text = "${formatQty(entry.currentQuantity)} / ${formatQty(entry.threshold)}",
                 style = MaterialTheme.typography.bodySmall,

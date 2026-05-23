@@ -268,6 +268,46 @@ class ShoppingListViewModelTest {
         coVerify { shopping.setChecked("HH", "e1", true) }
     }
 
+    @Test
+    fun `typed bought quantity wins over defaultRestockQuantity in plan`() {
+        val vm = vmEmpty()
+        val auto = listOf(
+            mkEntry("auto:a", "Milk", ShoppingEntry.Source.AUTO, checked = true, linkedItemId = "a", drq = 4.0),
+        )
+        val plan = vm.computePlan(auto, emptyList(), mapOf("auto:a" to "7"))
+        assertEquals(1, plan.restocks.size)
+        assertEquals(7.0, plan.restocks[0].newQuantity)
+    }
+
+    @Test
+    fun `blank typed quantity falls back to defaultRestockQuantity`() {
+        val vm = vmEmpty()
+        val auto = listOf(
+            mkEntry("auto:a", "Milk", ShoppingEntry.Source.AUTO, checked = true, linkedItemId = "a", drq = 3.0),
+        )
+        val plan = vm.computePlan(auto, emptyList(), mapOf("auto:a" to ""))
+        assertEquals(1, plan.restocks.size)
+        assertEquals(3.0, plan.restocks[0].newQuantity)
+    }
+
+    @Test
+    fun `canFinish is false when checked auto has neither typed nor default`() = runTest {
+        val items = listOf(item("a", "Milk", quantity = 0.0, threshold = 2.0, drq = null))
+        val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(items) }
+        val shopping = mockk<ShoppingEntryRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
+        val vm = ShoppingListViewModel(household, stock, shopping)
+        vm.onAutoEntryToggle("a")
+
+        vm.uiState.test {
+            var s = awaitItem(); while (s.isLoading || s.runningLow.isEmpty()) s = awaitItem()
+            // Item is checked but has no drq and no typed qty → canFinish should be false
+            // Wait until the projection reflects the toggle.
+            if (s.runningLow.firstOrNull()?.entries?.firstOrNull()?.checked != true) s = awaitItem()
+            assertEquals(false, s.canFinish)
+            cancelAndConsumeRemainingEvents()
+        }
+    }
+
     private fun vmEmpty(): ShoppingListViewModel {
         val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
         val shopping = mockk<ShoppingEntryRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }

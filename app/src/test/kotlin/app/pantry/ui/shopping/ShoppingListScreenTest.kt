@@ -12,6 +12,7 @@ import app.pantry.data.shopping.ShoppingEntryRepository
 import app.pantry.data.stock.StockItemRepository
 import app.pantry.domain.model.StockItem
 import app.pantry.domain.model.StockUnit
+import app.pantry.ui.stock.AddEditItemViewModel
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -31,6 +32,12 @@ private fun makeManualEntryViewModel(hid: MutableStateFlow<String?>): AddManualE
     val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
     val shopping = mockk<ShoppingEntryRepository>(relaxed = true)
     return AddManualEntryViewModel(household, stock, shopping)
+}
+
+private fun makePromoteItemViewModel(hid: MutableStateFlow<String?>): AddEditItemViewModel {
+    val household = mockk<CurrentHouseholdRepository>().also { every { it.currentHouseholdId } returns hid }
+    val stock = mockk<StockItemRepository>(relaxed = true)
+    return AddEditItemViewModel(household, stock)
 }
 
 @RunWith(RobolectricTestRunner::class)
@@ -62,7 +69,7 @@ class ShoppingListScreenTest {
         val vm = ShoppingListViewModel(household, stock, shopping)
         val manualVm = makeManualEntryViewModel(hid)
 
-        compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm) }
+        compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm, promoteItemViewModel = makePromoteItemViewModel(hid)) }
 
         compose.onNodeWithTag("section_Running low").assertIsDisplayed()
         compose.onNodeWithTag("subheader_Dairy").assertIsDisplayed()
@@ -88,7 +95,7 @@ class ShoppingListScreenTest {
         }
         val vm = ShoppingListViewModel(household, stock, shopping)
         val manualVm = makeManualEntryViewModel(hid)
-        compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm) }
+        compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm, promoteItemViewModel = makePromoteItemViewModel(hid)) }
 
         // Compose has no direct LineThrough matcher — verify the entry's row tag renders, which is the
         // wire we care about (the strike-through is a visual decoration we trust the Composable applies).
@@ -104,13 +111,13 @@ class ShoppingListScreenTest {
 
         val vm = ShoppingListViewModel(household, stock, shopping)
         val manualVm = makeManualEntryViewModel(hid)
-        compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm) }
+        compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm, promoteItemViewModel = makePromoteItemViewModel(hid)) }
 
         compose.onNodeWithText("Nothing to buy").assertIsDisplayed()
     }
 
     @Test
-    fun `finish shopping menu item is disabled when nothing is checked`() {
+    fun `finish shopping bottom button is disabled when nothing is checked`() {
         val hid = MutableStateFlow<String?>("HH")
         val household = mockk<CurrentHouseholdRepository>().also { every { it.currentHouseholdId } returns hid }
         val stock = mockk<StockItemRepository>().also {
@@ -125,14 +132,13 @@ class ShoppingListScreenTest {
         }
         val vm = ShoppingListViewModel(household, stock, shopping)
         val manualVm = makeManualEntryViewModel(hid)
-        compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm) }
+        compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm, promoteItemViewModel = makePromoteItemViewModel(hid)) }
 
-        compose.onNodeWithTag("overflow").performClick()
-        compose.onNodeWithTag("menu_finish_shopping").assertIsNotEnabled()
+        compose.onNodeWithTag("btn_finish_shopping").assertIsNotEnabled()
     }
 
     @Test
-    fun `confirming finish shopping fires the VM action`() = kotlinx.coroutines.test.runTest(kotlinx.coroutines.test.UnconfinedTestDispatcher()) {
+    fun `tapping finish shopping bottom button fires the VM action`() = kotlinx.coroutines.test.runTest(kotlinx.coroutines.test.UnconfinedTestDispatcher()) {
         val hid = MutableStateFlow<String?>("HH")
         val household = mockk<CurrentHouseholdRepository>().also { every { it.currentHouseholdId } returns hid }
         val stock = mockk<StockItemRepository>().also {
@@ -152,9 +158,8 @@ class ShoppingListScreenTest {
         vm.onAutoEntryToggle("a")
 
         val manualVm = makeManualEntryViewModel(hid)
-        compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm) }
-        compose.onNodeWithTag("overflow").performClick()
-        compose.onNodeWithTag("menu_finish_shopping").performClick()
+        compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm, promoteItemViewModel = makePromoteItemViewModel(hid)) }
+        compose.onNodeWithTag("btn_finish_shopping").performClick()
         compose.onNodeWithTag("confirm_finish").performClick()
 
         advanceUntilIdle()

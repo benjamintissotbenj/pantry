@@ -33,6 +33,8 @@ class ShoppingListViewModel @Inject constructor(
     private val autoChecked = MutableStateFlow<Set<String>>(emptySet())
     private val skippedDialogVisible = MutableStateFlow(false)
     private val pendingReport = MutableStateFlow<FinishShoppingReport?>(null)
+    private val boughtQuantities = MutableStateFlow<Map<String, String>>(emptyMap())
+    private val pendingPromotions = MutableStateFlow<List<PendingPromotion>>(emptyList())
 
     val uiState: StateFlow<ShoppingListUiState> =
         currentHousehold.currentHouseholdId
@@ -44,8 +46,19 @@ class ShoppingListViewModel @Inject constructor(
                     autoChecked,
                     pendingReport,
                     skippedDialogVisible,
-                ) { items, manualEntries, checked, report, skippedVisible ->
-                    project(items, manualEntries, checked, report, skippedVisible)
+                    boughtQuantities,
+                    pendingPromotions,
+                ) { values ->
+                    @Suppress("UNCHECKED_CAST")
+                    project(
+                        items = values[0] as List<StockItem>,
+                        manualEntries = values[1] as List<ShoppingEntry>,
+                        autoCheckedSet = values[2] as Set<String>,
+                        report = values[3] as FinishShoppingReport?,
+                        skippedVisible = values[4] as Boolean,
+                        boughtQuantitiesMap = values[5] as Map<String, String>,
+                        pendingPromos = values[6] as List<PendingPromotion>,
+                    )
                 }
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ShoppingListUiState())
@@ -59,9 +72,26 @@ class ShoppingListViewModel @Inject constructor(
         viewModelScope.launch { shopping.setChecked(hid, entryId, newChecked) }
     }
 
+    fun onQuantityChange(entryId: String, value: String) {
+        boughtQuantities.update { it + (entryId to value) }
+    }
+
+    fun completePromotion() {
+        pendingPromotions.update { it.drop(1) }
+    }
+
     fun onFinishShopping(onDone: (success: Boolean) -> Unit) {
         val hid = currentHousehold.currentHouseholdId.value ?: return onDone(false)
         val plan = buildPlanFromState() ?: return onDone(false)
+        // Capture promotions BEFORE the entries are deleted by the batch.
+        val s = uiState.value
+        val allManual = s.manual.flatMap { it.entries }
+        val promotions = allManual
+            .filter { it.checked && it.linkedItemId == null }
+            .mapNotNull { e ->
+                val typed = s.boughtQuantities[e.id]?.takeIf { it.isNotBlank() }?.toDoubleOrNull()
+                if (typed != null) PendingPromotion(name = e.name, quantity = typed) else null
+            }
         viewModelScope.launch {
             val result = shopping.finishShopping(hid, plan)
             result.onSuccess { dataReport ->
@@ -72,6 +102,8 @@ class ShoppingListViewModel @Inject constructor(
                     skippedNames = dataReport.skippedNames,
                 )
                 autoChecked.value = emptySet()
+                boughtQuantities.value = emptyMap()
+                pendingPromotions.value = promotions
                 onDone(true)
             }
             result.onFailure { onDone(false) }
@@ -93,6 +125,8 @@ class ShoppingListViewModel @Inject constructor(
         autoCheckedSet: Set<String>,
         report: FinishShoppingReport?,
         skippedVisible: Boolean,
+        boughtQuantitiesMap: Map<String, String> = emptyMap(),
+        pendingPromos: List<PendingPromotion> = emptyList(),
     ): ShoppingListUiState {
         val itemsById = items.associateBy { it.id }
         val auto = items
@@ -121,18 +155,29 @@ class ShoppingListViewModel @Inject constructor(
             )
         }
 
-        val plan = computePlan(auto, resolvedManual)
+        val plan = computePlan(auto, resolvedManual, boughtQuantitiesMap)
+        val canFinish = !hasBlockingMissingQty(auto, resolvedManual, boughtQuantitiesMap)
+        val categories = items
+            .map { it.category }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .sortedBy { it.lowercase() }
+
         return ShoppingListUiState(
             isLoading = false,
             runningLow = groupByCategory(auto),
             manual = groupByCategory(resolvedManual),
+            boughtQuantities = boughtQuantitiesMap,
             finishShoppingPreview = FinishShoppingPreview(
                 restockCount = plan.restocks.size,
                 clearCount = plan.manualEntryIdsToDelete.size,
                 skipCount = plan.skippedNames.size,
             ),
+            canFinish = canFinish,
             pendingReport = report,
             skippedDialogVisible = skippedVisible,
+            pendingPromotion = pendingPromos.firstOrNull(),
+            existingCategories = categories,
         )
     }
 
@@ -157,23 +202,25 @@ class ShoppingListViewModel @Inject constructor(
         val s = uiState.value
         val allAuto = s.runningLow.flatMap { it.entries }
         val allManual = s.manual.flatMap { it.entries }
-        return computePlan(allAuto, allManual)
+        return computePlan(allAuto, allManual, s.boughtQuantities)
     }
 
-    /** Pure: compute the plan from the current displayed entries. */
+    /** Pure: compute the plan from the current displayed entries + typed quantities. */
     internal fun computePlan(
         auto: List<ShoppingEntry>,
         manual: List<ShoppingEntry>,
+        bought: Map<String, String> = emptyMap(),
     ): FinishShoppingPlan {
         val restocks = mutableListOf<FinishShoppingPlan.Restock>()
         val toDelete = mutableListOf<String>()
         val skipped = mutableListOf<String>()
 
         auto.filter { it.checked }.forEach { e ->
-            val newQty = e.defaultRestockQuantity
+            val typed = bought[e.id]?.takeIf { it.isNotBlank() }?.toDoubleOrNull()
+            val effective = typed ?: e.defaultRestockQuantity
             val itemId = e.linkedItemId
-            if (newQty != null && itemId != null) {
-                restocks += FinishShoppingPlan.Restock(itemId, newQty)
+            if (effective != null && itemId != null) {
+                restocks += FinishShoppingPlan.Restock(itemId, effective)
             } else {
                 skipped += e.name
             }
@@ -181,17 +228,31 @@ class ShoppingListViewModel @Inject constructor(
         manual.filter { it.checked }.forEach { e ->
             toDelete += e.id
             val linked = e.linkedItemId
-            val newQty = e.defaultRestockQuantity
-            if (linked != null && newQty != null) {
-                // Manual-linked: also restock the linked catalog item.
-                restocks += FinishShoppingPlan.Restock(linked, newQty)
+            val typed = bought[e.id]?.takeIf { it.isNotBlank() }?.toDoubleOrNull()
+            val effective = typed ?: e.defaultRestockQuantity
+            if (linked != null && effective != null) {
+                restocks += FinishShoppingPlan.Restock(linked, effective)
             }
-            // Manual-only or linked-without-default: just delete the entry; no restock, no skip-count bump.
         }
         return FinishShoppingPlan(
-            restocks = restocks.distinctBy { it.itemId }, // collapse dup writes to same item
+            restocks = restocks.distinctBy { it.itemId },
             manualEntryIdsToDelete = toDelete,
             skippedNames = skipped,
         )
+    }
+
+    /** True if any checked AUTO or MANUAL-linked entry has neither a typed qty nor a defaultRestockQuantity. */
+    private fun hasBlockingMissingQty(
+        auto: List<ShoppingEntry>,
+        manual: List<ShoppingEntry>,
+        bought: Map<String, String>,
+    ): Boolean {
+        fun missing(e: ShoppingEntry): Boolean {
+            val typed = bought[e.id]?.takeIf { it.isNotBlank() }?.toDoubleOrNull()
+            return typed == null && e.defaultRestockQuantity == null
+        }
+        val autoBlocked = auto.any { it.checked && missing(it) }
+        val manualLinkedBlocked = manual.any { it.checked && it.linkedItemId != null && missing(it) }
+        return autoBlocked || manualLinkedBlocked
     }
 }

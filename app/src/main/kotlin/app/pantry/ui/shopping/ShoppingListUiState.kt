@@ -8,9 +8,13 @@ data class ShoppingListUiState(
     val isLoading: Boolean = true,
     val runningLow: List<CategorySubgroup> = emptyList(),
     val manual: List<CategorySubgroup> = emptyList(),
+    val boughtQuantities: Map<String, String> = emptyMap(), // entryId -> typed string
     val finishShoppingPreview: FinishShoppingPreview = FinishShoppingPreview(0, 0, 0),
+    val canFinish: Boolean = false,
     val pendingReport: FinishShoppingReport? = null,
     val skippedDialogVisible: Boolean = false,
+    val pendingPromotion: PendingPromotion? = null,
+    val existingCategories: List<String> = emptyList(),
 ) {
     val isEmpty: Boolean get() = runningLow.isEmpty() && manual.isEmpty()
 }
@@ -32,3 +36,5 @@ data class FinishShoppingReport(
     val skippedCount: Int,
     val skippedNames: List<String>,
 )
+
+data class PendingPromotion(val name: String, val quantity: Double)
