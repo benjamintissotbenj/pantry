@@ -79,9 +79,8 @@ In the left nav: "Policy" → "App content". Fill each section:
 
 URL (paste exactly):
 ```
-https://github.com/<USER>/<REPO>/blob/main/PRIVACY.md
+https://github.com/benjamintissotbenj/pantry/blob/main/PRIVACY.md
 ```
-(Replace `<USER>` and `<REPO>` with your actual GitHub user/repo.)
 
 ### Ads
 
@@ -139,9 +138,8 @@ Key answers:
 In the left nav: "Grow" → "Store listing". Fill from `store-listing.md`:
 
 - **App name**: `Pantry`
-- **Short description**: paste the short description
-- **Full description**: paste the full description (replace `<USER>` and
-  `<REPO>` with your actual values)
+- **Short description**: paste the short description from `store-listing.md`
+- **Full description**: paste the full description from `store-listing.md`
 
 ### Graphics
 
@@ -157,9 +155,9 @@ In the left nav: "Grow" → "Store listing". Fill from `store-listing.md`:
 
 ### Contact details
 
-- **Email**: your contact email (same one in PRIVACY.md)
+- **Email**: `benjamin.tisso@live.fr` (matches the address in PRIVACY.md)
 - **Phone**: optional, leave blank if you don't want it public
-- **Website**: optional — `https://github.com/<USER>/<REPO>` works
+- **Website**: `https://github.com/benjamintissotbenj/pantry`
 
 Save.
 

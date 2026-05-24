@@ -28,7 +28,7 @@ Your household's shared kitchen — track stock and shopping in real time.
 ## Build & Install
 
 ```bash
-git clone https://github.com/<USER>/<REPO>
+git clone https://github.com/benjamintissotbenj/pantry
 cd pantry
 
 # 1) Drop your Firebase config:

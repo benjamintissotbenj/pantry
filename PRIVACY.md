@@ -241,7 +241,7 @@ on this policy, you are encouraged to watch the repository for changes to this f
 If you have a question about this privacy policy, want to request deletion of your account,
 or believe there is an inaccuracy in this policy, please contact:
 
-**`<REPLACE WITH YOUR CONTACT EMAIL>`**
+**benjamin.tisso@live.fr**
 
 This address is maintained by the repository owner. Requests sent to this address are
 handled personally and are not routed through any third-party ticketing system.

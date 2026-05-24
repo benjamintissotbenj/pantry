@@ -57,7 +57,7 @@ from any phone signed in to the household.
   no ads, no third-party SDKs other than Firebase. Crash reports via
   Crashlytics carry no PII.
 
-• Open source. The whole codebase is at github.com/<USER>/<REPO>.
+• Open source. The whole codebase is at github.com/benjamintissotbenj/pantry.
   Read the source, file issues, send PRs.
 
 # Who it's for
@@ -74,12 +74,12 @@ purchases. The backend runs on Firebase's free + low-cost tier.
 # Open source
 
 Source code, design docs (phase-by-phase development history),
-and contribution guide all at github.com/<USER>/<REPO>.
+and contribution guide all at github.com/benjamintissotbenj/pantry.
 
 # Privacy
 
 See the in-repo privacy policy:
-github.com/<USER>/<REPO>/blob/main/PRIVACY.md
+github.com/benjamintissotbenj/pantry/blob/main/PRIVACY.md
 ```
 
 (~2300 chars — well under the 4000 limit, leaves room for future feature additions.)
@@ -164,7 +164,7 @@ Pantry collects the following data:
 
 > Users can request their data be deleted by leaving all households via
 > Settings → Leave household, then deleting their Firebase Auth account
-> (currently by contacting the developer at <CONTACT EMAIL>; in-app
+> (currently by contacting the developer at benjamin.tisso@live.fr; in-app
 > account deletion is planned for v2).
 
 ### Data shared with third parties
@@ -188,14 +188,14 @@ No other third parties.
 (Fill in after the repo is public:)
 
 ```
-https://github.com/<USER>/<REPO>/blob/main/PRIVACY.md
+https://github.com/benjamintissotbenj/pantry/blob/main/PRIVACY.md
 ```
 
 ## Notes
 
-- Replace `<USER>` and `<REPO>` everywhere with the actual GitHub username
-  and repo name once you push.
-- The `<CONTACT EMAIL>` placeholder should match the one in PRIVACY.md.
+- This file's GitHub URLs point at https://github.com/benjamintissotbenj/pantry
+  and the contact email is benjamin.tisso@live.fr — matching the live
+  values committed in PRIVACY.md. If you fork this repo, swap them.
 - Update this file if your app description, category, or data collection
   changes between releases. Play requires consistency between this file's
   content and the live Play listing.
