@@ -1,6 +1,7 @@
 package app.pantry.ui.shopping
 
 import app.cash.turbine.test
+import app.pantry.data.connectivity.ConnectivityRepository
 import app.pantry.data.household.CurrentHouseholdRepository
 import app.pantry.data.shopping.ShoppingEntryRepository
 import app.pantry.data.stock.StockItemRepository
@@ -28,6 +29,7 @@ class AddManualEntryViewModelTest {
 
     private val hidFlow = MutableStateFlow<String?>("HH")
     private val household = mockk<CurrentHouseholdRepository>().also { every { it.currentHouseholdId } returns hidFlow }
+    private val connectivity = mockk<ConnectivityRepository>().also { every { it.isOffline } returns MutableStateFlow(false) }
 
     @BeforeEach
     fun setUp() { Dispatchers.setMain(UnconfinedTestDispatcher()) }
@@ -42,7 +44,7 @@ class AddManualEntryViewModelTest {
         }
         val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(items) }
         val shopping = mockk<ShoppingEntryRepository>(relaxed = true)
-        val vm = AddManualEntryViewModel(household, stock, shopping)
+        val vm = AddManualEntryViewModel(household, stock, shopping, connectivity)
         vm.onQueryChange("milk")
 
         vm.uiState.test {
@@ -59,7 +61,7 @@ class AddManualEntryViewModelTest {
         val shopping = mockk<ShoppingEntryRepository>(relaxed = true).also {
             coEvery { it.addEntry(any(), any(), any()) } returns Result.success(Unit)
         }
-        val vm = AddManualEntryViewModel(household, stock, shopping)
+        val vm = AddManualEntryViewModel(household, stock, shopping, connectivity)
         vm.onPickSuggestion(AddManualEntryUiState.Suggestion("a", "Wine"))
         vm.submit()
 
@@ -72,7 +74,7 @@ class AddManualEntryViewModelTest {
         val shopping = mockk<ShoppingEntryRepository>(relaxed = true).also {
             coEvery { it.addEntry(any(), any(), any()) } returns Result.success(Unit)
         }
-        val vm = AddManualEntryViewModel(household, stock, shopping)
+        val vm = AddManualEntryViewModel(household, stock, shopping, connectivity)
         vm.onQueryChange("Champagne")
         vm.submit()
 
@@ -84,7 +86,7 @@ class AddManualEntryViewModelTest {
         val items = listOf(StockItem("a", "Wine", "Other", StockUnit.COUNT, 0.0, 1.0, Instant.now(), null))
         val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(items) }
         val shopping = mockk<ShoppingEntryRepository>(relaxed = true)
-        val vm = AddManualEntryViewModel(household, stock, shopping)
+        val vm = AddManualEntryViewModel(household, stock, shopping, connectivity)
 
         vm.onPickSuggestion(AddManualEntryUiState.Suggestion("a", "Wine"))
         vm.onUnlink()
@@ -104,7 +106,7 @@ class AddManualEntryViewModelTest {
         val items = listOf(StockItem("a", "Wine", "Other", StockUnit.COUNT, 0.0, 1.0, Instant.now(), null))
         val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(items) }
         val shopping = mockk<ShoppingEntryRepository>(relaxed = true)
-        val vm = AddManualEntryViewModel(household, stock, shopping)
+        val vm = AddManualEntryViewModel(household, stock, shopping, connectivity)
         vm.onPickSuggestion(AddManualEntryUiState.Suggestion("a", "Wine"))
         vm.onQueryChange("Wine for guests")
 

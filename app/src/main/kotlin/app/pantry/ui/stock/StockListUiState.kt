@@ -8,6 +8,7 @@ data class StockListUiState(
     val searchQuery: String = "",
     val selectedCategory: String? = null, // null means "All"
     val errorMessage: String? = null,
+    val isOffline: Boolean = false,
 ) {
     val categories: List<String>
         get() = allItems.map { it.category }.filter { it.isNotBlank() }.distinct().sorted()

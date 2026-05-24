@@ -14,6 +14,7 @@ data class AddEditItemUiState(
     val isSubmitting: Boolean = false,
     val toast: String? = null,
     val dismissed: Boolean = false,
+    val isOffline: Boolean = false,
 ) {
     enum class Mode { Add, Edit }
 

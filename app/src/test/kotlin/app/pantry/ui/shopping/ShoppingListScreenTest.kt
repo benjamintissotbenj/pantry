@@ -7,6 +7,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import app.pantry.data.connectivity.ConnectivityRepository
 import app.pantry.data.household.CurrentHouseholdRepository
 import app.pantry.data.shopping.ShoppingEntryRepository
 import app.pantry.data.stock.StockItemRepository
@@ -27,17 +28,21 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
+private fun fakeConnectivity() = mockk<ConnectivityRepository>().also {
+    every { it.isOffline } returns MutableStateFlow(false)
+}
+
 private fun makeManualEntryViewModel(hid: MutableStateFlow<String?>): AddManualEntryViewModel {
     val household = mockk<CurrentHouseholdRepository>().also { every { it.currentHouseholdId } returns hid }
     val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
     val shopping = mockk<ShoppingEntryRepository>(relaxed = true)
-    return AddManualEntryViewModel(household, stock, shopping)
+    return AddManualEntryViewModel(household, stock, shopping, fakeConnectivity())
 }
 
 private fun makePromoteItemViewModel(hid: MutableStateFlow<String?>): AddEditItemViewModel {
     val household = mockk<CurrentHouseholdRepository>().also { every { it.currentHouseholdId } returns hid }
     val stock = mockk<StockItemRepository>(relaxed = true)
-    return AddEditItemViewModel(household, stock)
+    return AddEditItemViewModel(household, stock, fakeConnectivity())
 }
 
 @RunWith(RobolectricTestRunner::class)
@@ -66,7 +71,7 @@ class ShoppingListScreenTest {
         }
         val shopping = mockk<ShoppingEntryRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
 
-        val vm = ShoppingListViewModel(household, stock, shopping)
+        val vm = ShoppingListViewModel(household, stock, shopping, fakeConnectivity())
         val manualVm = makeManualEntryViewModel(hid)
 
         compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm, promoteItemViewModel = makePromoteItemViewModel(hid)) }
@@ -93,7 +98,7 @@ class ShoppingListScreenTest {
                 ),
             )
         }
-        val vm = ShoppingListViewModel(household, stock, shopping)
+        val vm = ShoppingListViewModel(household, stock, shopping, fakeConnectivity())
         val manualVm = makeManualEntryViewModel(hid)
         compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm, promoteItemViewModel = makePromoteItemViewModel(hid)) }
 
@@ -109,7 +114,7 @@ class ShoppingListScreenTest {
         val stock = mockk<StockItemRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
         val shopping = mockk<ShoppingEntryRepository>().also { coEvery { it.observe(any()) } returns flowOf(emptyList()) }
 
-        val vm = ShoppingListViewModel(household, stock, shopping)
+        val vm = ShoppingListViewModel(household, stock, shopping, fakeConnectivity())
         val manualVm = makeManualEntryViewModel(hid)
         compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm, promoteItemViewModel = makePromoteItemViewModel(hid)) }
 
@@ -130,7 +135,7 @@ class ShoppingListScreenTest {
         val shopping = mockk<ShoppingEntryRepository>(relaxed = true).also {
             coEvery { it.observe(any()) } returns flowOf(emptyList())
         }
-        val vm = ShoppingListViewModel(household, stock, shopping)
+        val vm = ShoppingListViewModel(household, stock, shopping, fakeConnectivity())
         val manualVm = makeManualEntryViewModel(hid)
         compose.setContent { ShoppingListScreen(viewModel = vm, manualEntryViewModel = manualVm, promoteItemViewModel = makePromoteItemViewModel(hid)) }
 
@@ -154,7 +159,7 @@ class ShoppingListScreenTest {
                 app.pantry.data.shopping.FinishShoppingReport(1, 0, 0, emptyList())
             )
         }
-        val vm = ShoppingListViewModel(household, stock, shopping)
+        val vm = ShoppingListViewModel(household, stock, shopping, fakeConnectivity())
         vm.onAutoEntryToggle("a")
 
         val manualVm = makeManualEntryViewModel(hid)

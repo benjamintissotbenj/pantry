@@ -1,5 +1,6 @@
 package app.pantry.ui.stock
 
+import app.pantry.data.connectivity.ConnectivityRepository
 import app.pantry.data.household.CurrentHouseholdRepository
 import app.pantry.data.stock.StockItemRepository
 import app.pantry.domain.model.StockItem
@@ -34,10 +35,14 @@ class StockListViewModelTest {
     @BeforeEach fun setUp() { Dispatchers.setMain(UnconfinedTestDispatcher()) }
     @AfterEach fun tearDown() { Dispatchers.resetMain() }
 
+    private fun fakeConnectivity() = mockk<ConnectivityRepository>().also {
+        every { it.isOffline } returns MutableStateFlow(false)
+    }
+
     private fun makeVm(items: List<StockItem>, hid: String? = "h-1"): StockListViewModel {
         val ch: CurrentHouseholdRepository = mockk { every { currentHouseholdId } returns MutableStateFlow(hid) }
         val stock: StockItemRepository = mockk { every { observe(any()) } returns flowOf(items) }
-        return StockListViewModel(ch, stock)
+        return StockListViewModel(ch, stock, fakeConnectivity())
     }
 
     @Test
@@ -77,7 +82,7 @@ class StockListViewModelTest {
         val stock: StockItemRepository = mockk {
             every { observe("h-1") } returns flow { throw RuntimeException("permission") }
         }
-        val vm = StockListViewModel(ch, stock)
+        val vm = StockListViewModel(ch, stock, fakeConnectivity())
         advanceUntilIdle()
         assertTrue(vm.uiState.value.errorMessage?.contains("permission") == true)
     }

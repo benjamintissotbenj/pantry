@@ -1,5 +1,6 @@
 package app.pantry.ui.stock
 
+import app.pantry.data.connectivity.ConnectivityRepository
 import app.pantry.data.household.CurrentHouseholdRepository
 import app.pantry.data.stock.StockItemRepository
 import app.pantry.domain.model.StockItem
@@ -29,6 +30,7 @@ class AddEditItemViewModelTest {
 
     private val ch: CurrentHouseholdRepository = mockk { every { currentHouseholdId } returns MutableStateFlow("h-1") }
     private val stock: StockItemRepository = mockk(relaxed = true)
+    private val connectivity: ConnectivityRepository = mockk { every { isOffline } returns MutableStateFlow(false) }
 
     @BeforeEach fun setUp() { Dispatchers.setMain(UnconfinedTestDispatcher()) }
     @AfterEach fun tearDown() { Dispatchers.resetMain() }
@@ -37,7 +39,7 @@ class AddEditItemViewModelTest {
     fun `add path submits and dismisses on success`() = runTest {
         coEvery { stock.create("h-1", "Milk", "Fridge", StockUnit.LITER, 1.5, 1.0, null) } returns
             Result.success(StockItem("i-1", "Milk", "Fridge", StockUnit.LITER, 1.5, 1.0, Instant.now(), null))
-        val vm = AddEditItemViewModel(ch, stock)
+        val vm = AddEditItemViewModel(ch, stock, connectivity)
         vm.beginAdd()
         vm.onNameChange("Milk")
         vm.onCategoryChange("Fridge")
@@ -54,7 +56,7 @@ class AddEditItemViewModelTest {
     fun `add path surfaces toast on failure`() = runTest {
         coEvery { stock.create(any(), any(), any(), any(), any(), any(), any()) } returns
             Result.failure(RuntimeException("network"))
-        val vm = AddEditItemViewModel(ch, stock)
+        val vm = AddEditItemViewModel(ch, stock, connectivity)
         vm.beginAdd()
         vm.onNameChange("Milk")
         vm.onQuantityChange("1")
@@ -67,7 +69,7 @@ class AddEditItemViewModelTest {
 
     @Test
     fun `submit no-ops when name blank`() = runTest {
-        val vm = AddEditItemViewModel(ch, stock)
+        val vm = AddEditItemViewModel(ch, stock, connectivity)
         vm.beginAdd()
         vm.onQuantityChange("1")
         vm.onThresholdChange("1")
@@ -80,7 +82,7 @@ class AddEditItemViewModelTest {
     fun `edit path submits update and dismisses`() = runTest {
         coEvery { stock.update("h-1", "i-1", "Milk", "Fridge", StockUnit.LITER, 0.5, 1.0, null) } returns
             Result.success(Unit)
-        val vm = AddEditItemViewModel(ch, stock)
+        val vm = AddEditItemViewModel(ch, stock, connectivity)
         vm.beginEdit(
             itemId = "i-1",
             name = "Milk",
@@ -98,7 +100,7 @@ class AddEditItemViewModelTest {
     @Test
     fun `delete in edit mode calls repository`() = runTest {
         coEvery { stock.delete("h-1", "i-1") } returns Result.success(Unit)
-        val vm = AddEditItemViewModel(ch, stock)
+        val vm = AddEditItemViewModel(ch, stock, connectivity)
         vm.beginEdit(
             itemId = "i-1",
             name = "Milk",
@@ -115,7 +117,7 @@ class AddEditItemViewModelTest {
 
     @Test
     fun `delete in add mode is a no-op`() = runTest {
-        val vm = AddEditItemViewModel(ch, stock)
+        val vm = AddEditItemViewModel(ch, stock, connectivity)
         vm.beginAdd()
         vm.delete()
         advanceUntilIdle()
@@ -126,7 +128,7 @@ class AddEditItemViewModelTest {
     fun `blank default restock quantity creates item with null`() = runTest {
         coEvery { stock.create(any(), any(), any(), any(), any(), any(), defaultRestockQuantity = null) } returns
             Result.success(StockItem("i-1", "Milk", "", StockUnit.COUNT, 1.0, 1.0, Instant.now(), null))
-        val vm = AddEditItemViewModel(ch, stock)
+        val vm = AddEditItemViewModel(ch, stock, connectivity)
         vm.beginAdd()
         vm.onNameChange("Milk")
         vm.onQuantityChange("1")
@@ -139,7 +141,7 @@ class AddEditItemViewModelTest {
     fun `numeric default restock quantity round-trips on edit`() = runTest {
         coEvery { stock.update(any(), any(), any(), any(), any(), any(), any(), defaultRestockQuantity = 4.0) } returns
             Result.success(Unit)
-        val vm = AddEditItemViewModel(ch, stock)
+        val vm = AddEditItemViewModel(ch, stock, connectivity)
         vm.beginEdit(
             itemId = "x",
             name = "Milk",
@@ -157,7 +159,7 @@ class AddEditItemViewModelTest {
 
     @Test
     fun `non-numeric default restock quantity blocks submission`() = runTest {
-        val vm = AddEditItemViewModel(ch, stock)
+        val vm = AddEditItemViewModel(ch, stock, connectivity)
         vm.beginAdd()
         vm.onNameChange("Milk")
         vm.onDefaultRestockQuantityChange("abc")
@@ -166,7 +168,7 @@ class AddEditItemViewModelTest {
 
     @Test
     fun `beginEdit formats non-null default restock quantity into UI string`() = runTest {
-        val vm = AddEditItemViewModel(ch, stock)
+        val vm = AddEditItemViewModel(ch, stock, connectivity)
         vm.beginEdit(
             itemId = "x",
             name = "Milk",
@@ -181,7 +183,7 @@ class AddEditItemViewModelTest {
 
     @Test
     fun `beginEdit formats whole-number default restock quantity without decimal`() = runTest {
-        val vm = AddEditItemViewModel(ch, stock)
+        val vm = AddEditItemViewModel(ch, stock, connectivity)
         vm.beginEdit(
             itemId = "x",
             name = "Milk",

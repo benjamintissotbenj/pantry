@@ -3,6 +3,7 @@ package app.pantry.ui.stock
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import app.pantry.data.connectivity.ConnectivityRepository
 import app.pantry.data.household.CurrentHouseholdRepository
 import app.pantry.data.stock.StockItemRepository
 import app.pantry.domain.model.StockItem
@@ -39,9 +40,10 @@ class StockStepperTest {
         val sheetVm: AddEditItemViewModel = mockk(relaxed = true) {
             every { uiState } returns MutableStateFlow(AddEditItemUiState())
         }
+        val connectivity: ConnectivityRepository = mockk { every { isOffline } returns MutableStateFlow(false) }
         composeRule.setContent {
             StockListScreen(
-                viewModel = StockListViewModel(ch, stock),
+                viewModel = StockListViewModel(ch, stock, connectivity),
                 sheetViewModel = sheetVm,
             )
         }

@@ -2,14 +2,17 @@ package app.pantry.ui.stock
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.pantry.data.connectivity.ConnectivityRepository
 import app.pantry.data.household.CurrentHouseholdRepository
 import app.pantry.data.stock.StockItemRepository
 import app.pantry.domain.model.StockUnit
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -17,10 +20,15 @@ import kotlinx.coroutines.launch
 class AddEditItemViewModel @Inject constructor(
     private val currentHousehold: CurrentHouseholdRepository,
     private val stock: StockItemRepository,
+    private val connectivity: ConnectivityRepository,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AddEditItemUiState())
-    val uiState: StateFlow<AddEditItemUiState> = _state.asStateFlow()
+
+    val uiState: StateFlow<AddEditItemUiState> =
+        combine(_state, connectivity.isOffline) { state, offline ->
+            state.copy(isOffline = offline)
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, AddEditItemUiState())
 
     fun beginAdd(
         prefillName: String = "",

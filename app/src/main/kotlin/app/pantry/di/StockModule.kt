@@ -1,5 +1,7 @@
 package app.pantry.di
 
+import app.pantry.data.connectivity.AndroidConnectivityRepository
+import app.pantry.data.connectivity.ConnectivityRepository
 import app.pantry.data.shopping.FirestoreShoppingEntryRepository
 import app.pantry.data.shopping.ShoppingEntryRepository
 import app.pantry.data.stock.FirestoreStockItemRepository
@@ -18,4 +20,7 @@ abstract class StockBindings {
 
     @Binds @Singleton
     abstract fun bindShoppingEntryRepository(impl: FirestoreShoppingEntryRepository): ShoppingEntryRepository
+
+    @Binds @Singleton
+    abstract fun bindConnectivityRepository(impl: AndroidConnectivityRepository): ConnectivityRepository
 }

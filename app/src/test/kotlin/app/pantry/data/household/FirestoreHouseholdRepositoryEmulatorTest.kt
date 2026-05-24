@@ -58,7 +58,7 @@ class FirestoreHouseholdRepositoryEmulatorTest {
 
     @Test
     fun `create then observe round-trip`() = runTest {
-        val result = repo.create("Alice's House", ownerUid = "u-1")
+        val result = repo.create("Alice's House", ownerUid = "u-1", ownerDisplayName = "Alice", ownerEmail = "alice@example.com")
         assertTrue(result.isSuccess)
         val household = result.getOrThrow()
 

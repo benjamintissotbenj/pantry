@@ -7,6 +7,7 @@ data class AddManualEntryUiState(
     val linkedItemName: String? = null,
     val isSubmitting: Boolean = false,
     val dismissed: Boolean = false,
+    val isOffline: Boolean = false,
 ) {
     data class Suggestion(val itemId: String, val name: String)
     val canSubmit: Boolean get() = !isSubmitting && query.isNotBlank()

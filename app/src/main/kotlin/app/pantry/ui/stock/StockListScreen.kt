@@ -42,6 +42,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.pantry.domain.model.StockItem
+import app.pantry.ui.common.OfflineBanner
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,14 +71,17 @@ fun StockListScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    sheetViewModel.beginAdd(prefillCategory = state.selectedCategory.orEmpty())
-                    sheetOpen = true
+                    if (!state.isOffline) {
+                        sheetViewModel.beginAdd(prefillCategory = state.selectedCategory.orEmpty())
+                        sheetOpen = true
+                    }
                 },
                 modifier = Modifier.testTag("stock_fab"),
             ) { Icon(Icons.Filled.Add, contentDescription = "Add item") }
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
+            OfflineBanner(isOffline = state.isOffline)
             SearchField(
                 query = state.searchQuery,
                 onChange = viewModel::onSearchChange,
@@ -95,6 +99,7 @@ fun StockListScreen(
                     state.visibleItems.isEmpty() -> EmptyState()
                     else -> ItemList(
                         items = state.visibleItems,
+                        isOffline = state.isOffline,
                         onRowClick = onRowClick,
                         onIncrement = viewModel::onIncrement,
                         onDecrement = viewModel::onDecrement,
@@ -181,13 +186,14 @@ private fun EmptyState() {
 @Composable
 private fun ItemList(
     items: List<StockItem>,
+    isOffline: Boolean,
     onRowClick: (StockItem) -> Unit,
     onIncrement: (StockItem) -> Unit,
     onDecrement: (StockItem) -> Unit,
 ) {
     LazyColumn(Modifier.fillMaxSize().testTag("stock_list")) {
         items(items, key = { it.id }) { item ->
-            StockRow(item, onClick = { onRowClick(item) }, onPlus = { onIncrement(item) }, onMinus = { onDecrement(item) })
+            StockRow(item, isOffline = isOffline, onClick = { onRowClick(item) }, onPlus = { onIncrement(item) }, onMinus = { onDecrement(item) })
             HorizontalDivider()
         }
     }
@@ -196,6 +202,7 @@ private fun ItemList(
 @Composable
 private fun StockRow(
     item: StockItem,
+    isOffline: Boolean,
     onClick: () -> Unit,
     onPlus: () -> Unit,
     onMinus: () -> Unit,
@@ -221,7 +228,7 @@ private fun StockRow(
         )
         IconButton(
             onClick = onMinus,
-            enabled = item.quantity > 0.0,
+            enabled = !isOffline && item.quantity > 0.0,
             modifier = Modifier.testTag("stock_minus_${item.id}"),
         ) { Icon(Icons.Filled.Remove, contentDescription = "Decrease") }
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -244,6 +251,7 @@ private fun StockRow(
         }
         IconButton(
             onClick = onPlus,
+            enabled = !isOffline,
             modifier = Modifier.testTag("stock_plus_${item.id}"),
         ) { Icon(Icons.Filled.Add, contentDescription = "Increase") }
     }

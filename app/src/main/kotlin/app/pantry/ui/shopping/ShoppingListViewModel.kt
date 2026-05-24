@@ -2,6 +2,7 @@ package app.pantry.ui.shopping
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.pantry.data.connectivity.ConnectivityRepository
 import app.pantry.data.household.CurrentHouseholdRepository
 import app.pantry.data.shopping.FinishShoppingPlan
 import app.pantry.data.shopping.ShoppingEntryRepository
@@ -28,6 +29,7 @@ class ShoppingListViewModel @Inject constructor(
     private val currentHousehold: CurrentHouseholdRepository,
     private val stock: StockItemRepository,
     private val shopping: ShoppingEntryRepository,
+    private val connectivity: ConnectivityRepository,
 ) : ViewModel() {
 
     private val autoChecked = MutableStateFlow<Set<String>>(emptySet())
@@ -37,31 +39,35 @@ class ShoppingListViewModel @Inject constructor(
     private val pendingPromotions = MutableStateFlow<List<PendingPromotion>>(emptyList())
 
     val uiState: StateFlow<ShoppingListUiState> =
-        currentHousehold.currentHouseholdId
-            .flatMapLatest { hid ->
-                if (hid == null) flowOf(ShoppingListUiState(isLoading = false))
-                else combine(
-                    stock.observe(hid),
-                    shopping.observe(hid),
-                    autoChecked,
-                    pendingReport,
-                    skippedDialogVisible,
-                    boughtQuantities,
-                    pendingPromotions,
-                ) { values ->
-                    @Suppress("UNCHECKED_CAST")
-                    project(
-                        items = values[0] as List<StockItem>,
-                        manualEntries = values[1] as List<ShoppingEntry>,
-                        autoCheckedSet = values[2] as Set<String>,
-                        report = values[3] as FinishShoppingReport?,
-                        skippedVisible = values[4] as Boolean,
-                        boughtQuantitiesMap = values[5] as Map<String, String>,
-                        pendingPromos = values[6] as List<PendingPromotion>,
-                    )
-                }
-            }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ShoppingListUiState())
+        combine(
+            currentHousehold.currentHouseholdId
+                .flatMapLatest { hid ->
+                    if (hid == null) flowOf(ShoppingListUiState(isLoading = false))
+                    else combine(
+                        stock.observe(hid),
+                        shopping.observe(hid),
+                        autoChecked,
+                        pendingReport,
+                        skippedDialogVisible,
+                        boughtQuantities,
+                        pendingPromotions,
+                    ) { values ->
+                        @Suppress("UNCHECKED_CAST")
+                        project(
+                            items = values[0] as List<StockItem>,
+                            manualEntries = values[1] as List<ShoppingEntry>,
+                            autoCheckedSet = values[2] as Set<String>,
+                            report = values[3] as FinishShoppingReport?,
+                            skippedVisible = values[4] as Boolean,
+                            boughtQuantitiesMap = values[5] as Map<String, String>,
+                            pendingPromos = values[6] as List<PendingPromotion>,
+                        )
+                    }
+                },
+            connectivity.isOffline,
+        ) { state, offline ->
+            state.copy(isOffline = offline)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ShoppingListUiState())
 
     fun onAutoEntryToggle(itemId: String) {
         autoChecked.update { s -> if (itemId in s) s - itemId else s + itemId }

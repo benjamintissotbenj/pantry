@@ -99,7 +99,7 @@ fun AddManualEntryBottomSheet(
             }
             Button(
                 onClick = viewModel::submit,
-                enabled = state.canSubmit,
+                enabled = !state.isOffline && state.canSubmit,
                 modifier = Modifier.fillMaxWidth().testTag("btn_manual_save"),
             ) { Text(if (state.isSubmitting) "Saving…" else "Add") }
         }
