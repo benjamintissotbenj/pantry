@@ -144,4 +144,14 @@ class SettingsScreenTest {
         compose.onNodeWithTag("btn_remove_confirm").performClick()
         io.mockk.verify { vm.onRemoveMember("u2") }
     }
+
+    @Test
+    fun `tapping rename pencil opens dialog and Save fires onRenameCategory`() {
+        val vm = makeVm(categories = listOf("Dairy", "Bakery"))
+        compose.setContent { SettingsScreen(onSignedOut = {}, viewModel = vm) }
+        compose.onNodeWithTag("btn_rename_category_Dairy").performScrollTo().performClick()
+        compose.onNodeWithTag("field_category_name").performTextReplacement("Fridge")
+        compose.onNodeWithTag("btn_category_save").performClick()
+        io.mockk.verify { vm.onRenameCategory("Dairy", "Fridge") }
+    }
 }

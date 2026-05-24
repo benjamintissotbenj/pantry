@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -60,6 +61,7 @@ fun SettingsScreen(
     var renameHouseholdOpen by remember { mutableStateOf(false) }
     var regenerateConfirmOpen by remember { mutableStateOf(false) }
     var memberToRemove by remember { mutableStateOf<MemberRow?>(null) }
+    var categoryToRename by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
 
@@ -157,6 +159,38 @@ fun SettingsScreen(
         )
     }
 
+    categoryToRename?.let { old ->
+        var input by rememberSaveable { mutableStateOf(old) }
+        AlertDialog(
+            onDismissRequest = { categoryToRename = null },
+            title = { Text("Rename category") },
+            text = {
+                Column {
+                    Text("All items in $old will move to the new name.")
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = input,
+                        onValueChange = { input = it },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth().testTag("field_category_name"),
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val newName = input.trim()
+                        categoryToRename = null
+                        viewModel.onRenameCategory(old, newName)
+                    },
+                    enabled = input.trim().isNotEmpty() && input.trim() != old,
+                    modifier = Modifier.testTag("btn_category_save"),
+                ) { Text("Save") }
+            },
+            dismissButton = { TextButton(onClick = { categoryToRename = null }) { Text("Cancel") } },
+        )
+    }
+
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding),
@@ -232,8 +266,19 @@ fun SettingsScreen(
                 if (state.categories.isNotEmpty()) {
                     SettingsSection("Categories") {
                         state.categories.forEach { cat ->
-                            SettingsRow(modifier = Modifier.testTag("row_category_$cat")) {
-                                Text(cat, style = MaterialTheme.typography.bodyLarge)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp)
+                                    .testTag("row_category_$cat"),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(cat, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                                IconButton(
+                                    onClick = { categoryToRename = cat },
+                                    enabled = !state.isOffline,
+                                    modifier = Modifier.testTag("btn_rename_category_$cat"),
+                                ) { Icon(Icons.Default.Edit, contentDescription = "Rename") }
                             }
                         }
                     }

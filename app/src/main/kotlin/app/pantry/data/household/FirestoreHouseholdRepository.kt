@@ -101,8 +101,28 @@ class FirestoreHouseholdRepository @Inject constructor(
         Unit
     }
 
-    override suspend fun renameCategory(householdId: String, oldName: String, newName: String): Result<Int> =
-        Result.failure(NotImplementedError("US-12 will implement"))
+    override suspend fun renameCategory(
+        householdId: String,
+        oldName: String,
+        newName: String,
+    ): Result<Int> = runCatching {
+        val itemsCol = firestore.collection("households").document(householdId).collection("items")
+        val snapshot = itemsCol.whereEqualTo("category", oldName).get().await()
+        val count = snapshot.size()
+        if (count > 450) {
+            throw IllegalStateException("Too many items to rename in one batch — try v2")
+        }
+        if (count == 0) return@runCatching 0
+        val batch = firestore.batch()
+        snapshot.documents.forEach { doc ->
+            batch.update(doc.reference, mapOf(
+                "category" to newName,
+                "updatedAt" to FieldValue.serverTimestamp(),
+            ))
+        }
+        batch.commit().await()
+        count
+    }
 
     override suspend fun leaveHousehold(householdId: String): Result<Unit> =
         Result.failure(NotImplementedError("US-13 will implement"))
