@@ -154,4 +154,44 @@ class SettingsScreenTest {
         compose.onNodeWithTag("btn_category_save").performClick()
         io.mockk.verify { vm.onRenameCategory("Dairy", "Fridge") }
     }
+
+    @Test
+    fun `leave household dialog shows last-member copy when only one member`() {
+        val vm = makeVm(
+            householdName = "Solo",
+            members = listOf(MemberRow("u1", "Ben", "ben@example.com", isYou = true, canRemove = false)),
+        )
+        compose.setContent { SettingsScreen(onSignedOut = {}, viewModel = vm) }
+        compose.onNodeWithTag("btn_leave_household").performScrollTo().performClick()
+        compose.onNodeWithText("The household and its stock will be deleted.").assertIsDisplayed()
+    }
+
+    @Test
+    fun `leave household dialog does not show deletion copy when multiple members`() {
+        val vm = makeVm(
+            householdName = "Family",
+            members = listOf(
+                MemberRow("u1", "Ben", "ben@example.com", isYou = true, canRemove = false),
+                MemberRow("u2", "Alice", "alice@example.com", isYou = false, canRemove = false),
+            ),
+        )
+        compose.setContent { SettingsScreen(onSignedOut = {}, viewModel = vm) }
+        compose.onNodeWithTag("btn_leave_household").performScrollTo().performClick()
+        compose.onNodeWithText("The household and its stock will be deleted.").assertDoesNotExist()
+    }
+
+    @Test
+    fun `tapping Leave confirm fires onLeaveHousehold`() {
+        val vm = makeVm(
+            householdName = "Family",
+            members = listOf(
+                MemberRow("u1", "Ben", "ben@example.com", isYou = true, canRemove = false),
+                MemberRow("u2", "Alice", "alice@example.com", isYou = false, canRemove = false),
+            ),
+        )
+        compose.setContent { SettingsScreen(onSignedOut = {}, viewModel = vm) }
+        compose.onNodeWithTag("btn_leave_household").performScrollTo().performClick()
+        compose.onNodeWithTag("btn_leave_confirm").performClick()
+        io.mockk.verify { vm.onLeaveHousehold() }
+    }
 }

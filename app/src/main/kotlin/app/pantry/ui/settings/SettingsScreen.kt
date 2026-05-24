@@ -61,6 +61,7 @@ fun SettingsScreen(
     var renameHouseholdOpen by remember { mutableStateOf(false) }
     var regenerateConfirmOpen by remember { mutableStateOf(false) }
     var memberToRemove by remember { mutableStateOf<MemberRow?>(null) }
+    var leaveOpen by remember { mutableStateOf(false) }
     var categoryToRename by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
@@ -191,6 +192,31 @@ fun SettingsScreen(
         )
     }
 
+    if (leaveOpen) {
+        val isLastMember = state.members.size == 1
+        AlertDialog(
+            onDismissRequest = { leaveOpen = false },
+            title = { Text("Leave ${state.householdName}?") },
+            text = {
+                Column {
+                    Text("You'll lose access to the shared stock.")
+                    if (isLastMember) {
+                        Spacer(Modifier.height(8.dp))
+                        Text("The household and its stock will be deleted.")
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { leaveOpen = false; viewModel.onLeaveHousehold() },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    modifier = Modifier.testTag("btn_leave_confirm"),
+                ) { Text("Leave") }
+            },
+            dismissButton = { TextButton(onClick = { leaveOpen = false }) { Text("Cancel") } },
+        )
+    }
+
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding),
@@ -299,7 +325,7 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth().testTag("settings_signout"),
                 ) { Text("Sign out") }
                 Button(
-                    onClick = { /* wired in US-13 */ },
+                    onClick = { leaveOpen = true },
                     enabled = !state.isOffline,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer,

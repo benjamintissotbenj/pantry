@@ -124,8 +124,13 @@ class FirestoreHouseholdRepository @Inject constructor(
         count
     }
 
-    override suspend fun leaveHousehold(householdId: String): Result<Unit> =
-        Result.failure(NotImplementedError("US-13 will implement"))
+    override suspend fun leaveHousehold(householdId: String): Result<Unit> = runCatching {
+        val functions = FirebaseFunctions.getInstance("europe-west1")
+        functions.getHttpsCallable("leaveHousehold")
+            .call(mapOf("hid" to householdId))
+            .await()
+        Unit
+    }
 
     private fun DocumentSnapshot.toHousehold(): Household? {
         if (!exists()) return null
