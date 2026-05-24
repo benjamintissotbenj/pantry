@@ -1,4 +1,7 @@
 rules_version = '2';
+
+// To deploy: firebase deploy --only firestore:rules
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -11,11 +14,23 @@ service cloud.firestore {
       // Firestore can evaluate it against the array-contains query filter.
       allow read: if request.auth != null
         && request.auth.uid in resource.data.memberUids;
-      allow update, delete: if request.auth != null
-        && request.auth.uid in resource.data.memberUids;
+
+      // Client-side updates are restricted to safe fields only. Membership,
+      // creator, and the denormalized members map are admin-SDK-only via the
+      // removeMember, leaveHousehold, and joinHousehold Cloud Functions.
+      allow update: if request.auth != null
+        && request.auth.uid in resource.data.memberUids
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['name', 'inviteCode']);
+
+      // Client cannot delete. The leaveHousehold Cloud Function (admin SDK)
+      // is the only path that recursively deletes a household.
+      allow delete: if false;
+
       allow create: if request.auth != null
         && request.resource.data.memberUids.size() == 1
-        && request.resource.data.memberUids[0] == request.auth.uid;
+        && request.resource.data.memberUids[0] == request.auth.uid
+        && request.resource.data.createdBy == request.auth.uid;
 
       // Subcollections need get() because resource here is the subdoc,
       // not the parent household — we have to fetch the parent's memberUids.
