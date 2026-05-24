@@ -5,6 +5,8 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextReplacement
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -69,5 +71,15 @@ class SettingsScreenTest {
         val vm = makeVm(isOffline = true)
         compose.setContent { SettingsScreen(onSignedOut = {}, viewModel = vm) }
         compose.onNodeWithTag("offline_banner").assertIsDisplayed()
+    }
+
+    @Test
+    fun `tapping household row opens rename dialog and Save fires VM`() {
+        val vm = makeVm(householdName = "Old")
+        compose.setContent { SettingsScreen(onSignedOut = {}, viewModel = vm) }
+        compose.onNodeWithTag("row_rename_household").performClick()
+        compose.onNodeWithTag("field_household_name").performTextReplacement("New name")
+        compose.onNodeWithTag("btn_rename_save").performClick()
+        io.mockk.verify { vm.onRenameHousehold("New name") }
     }
 }

@@ -1,5 +1,6 @@
 package app.pantry.ui.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -9,20 +10,26 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -37,6 +44,7 @@ fun SettingsScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    var renameHouseholdOpen by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.signedOut) { if (state.signedOut) onSignedOut() }
     LaunchedEffect(state.pendingPostLeaveNav) {
@@ -48,6 +56,36 @@ fun SettingsScreen(
         val msg = state.pendingSnackbar ?: return@LaunchedEffect
         snackbarHostState.showSnackbar(msg)
         viewModel.consumeSnackbar()
+    }
+
+    if (renameHouseholdOpen) {
+        var input by rememberSaveable { mutableStateOf(state.householdName) }
+        AlertDialog(
+            onDismissRequest = { renameHouseholdOpen = false },
+            title = { Text("Rename household") },
+            text = {
+                OutlinedTextField(
+                    value = input,
+                    onValueChange = { input = it },
+                    label = { Text("Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().testTag("field_household_name"),
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        renameHouseholdOpen = false
+                        viewModel.onRenameHousehold(input)
+                    },
+                    enabled = input.trim().isNotEmpty() && input.trim() != state.householdName,
+                    modifier = Modifier.testTag("btn_rename_save"),
+                ) { Text("Save") }
+            },
+            dismissButton = {
+                TextButton(onClick = { renameHouseholdOpen = false }) { Text("Cancel") }
+            },
+        )
     }
 
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
@@ -63,7 +101,11 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 SettingsSection("Household") {
-                    SettingsRow(modifier = Modifier.testTag("row_rename_household")) {
+                    SettingsRow(
+                        modifier = Modifier
+                            .testTag("row_rename_household")
+                            .clickable(enabled = !state.isOffline) { renameHouseholdOpen = true },
+                    ) {
                         Text(state.householdName.ifEmpty { "—" }, style = MaterialTheme.typography.bodyLarge)
                     }
                 }
