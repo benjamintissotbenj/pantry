@@ -291,7 +291,8 @@ class SettingsViewModelTest {
         advanceUntilIdle()
         vm.onRemoveMember("u2")
         advanceUntilIdle()
-        assertEquals("Member removed", vm.uiState.value.pendingSnackbar)
+        // Member u2 is Alice in the default household fixture.
+        assertEquals("Removed Alice", vm.uiState.value.pendingSnackbar)
     }
 
     @Test

@@ -25,6 +25,11 @@ export const leaveHousehold = onCall<Payload>(
 
     if (memberUids.length === 1 && memberUids[0] === uid) {
       // Last member — recursively delete the household and subcollections.
+      // NOTE: recursiveDelete cannot participate in a Firestore transaction, so
+      // there is a small window where the household is gone but the user's
+      // households array still references `hid`. If the second update below
+      // fails, the user doc keeps a dangling id — harmless (the UI tolerates
+      // ghost ids gracefully) but worth knowing for Phase 5 cleanup work.
       await getFirestore().recursiveDelete(hhRef);
       await db.collection("users").doc(uid).update({
         households: admin.firestore.FieldValue.arrayRemove(hid),

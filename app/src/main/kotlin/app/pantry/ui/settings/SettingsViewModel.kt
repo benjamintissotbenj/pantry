@@ -134,9 +134,13 @@ class SettingsViewModel @Inject constructor(
 
     fun onRemoveMember(uid: String) {
         val hid = uiState.value.householdId ?: return
+        val name = uiState.value.members.firstOrNull { it.uid == uid }?.displayName
         viewModelScope.launch {
             households.removeMember(hid, uid).fold(
-                onSuccess = { events.update { it.copy(snackbar = "Member removed") } },
+                onSuccess = {
+                    val msg = if (name.isNullOrBlank()) "Member removed" else "Removed $name"
+                    events.update { it.copy(snackbar = msg) }
+                },
                 onFailure = { err -> events.update { it.copy(snackbar = err.message ?: "Couldn't remove member") } },
             )
         }
@@ -177,4 +181,5 @@ class SettingsViewModel @Inject constructor(
     fun consumeClipboard() { events.update { it.copy(clipboard = null) } }
     fun consumeShareCode() { events.update { it.copy(share = null) } }
     fun consumeNav() { events.update { it.copy(postLeaveNav = false) } }
+    fun consumeSignedOut() { events.update { it.copy(signedOut = false) } }
 }

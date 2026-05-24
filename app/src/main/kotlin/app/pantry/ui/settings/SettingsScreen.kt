@@ -66,7 +66,9 @@ fun SettingsScreen(
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
 
-    LaunchedEffect(state.signedOut) { if (state.signedOut) onSignedOut() }
+    LaunchedEffect(state.signedOut) {
+        if (state.signedOut) { onSignedOut(); viewModel.consumeSignedOut() }
+    }
     LaunchedEffect(state.pendingPostLeaveNav) {
         if (!state.pendingPostLeaveNav) return@LaunchedEffect
         onLeft()
