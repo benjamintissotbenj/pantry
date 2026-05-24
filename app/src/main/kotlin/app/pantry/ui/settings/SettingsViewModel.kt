@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -173,13 +172,6 @@ class SettingsViewModel @Inject constructor(
             )
         }
     }
-
-    /** Backwards-compat shim for SettingsScreen — US-8 will remove. */
-    fun signOut() = onSignOut()
-
-    /** Backwards-compat shim for SettingsScreen — US-8 will remove. */
-    val signedOut: StateFlow<Boolean> =
-        uiState.map { it.signedOut }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     fun consumeSnackbar() { events.update { it.copy(snackbar = null) } }
     fun consumeClipboard() { events.update { it.copy(clipboard = null) } }

@@ -304,15 +304,4 @@ class SettingsViewModelTest {
         assertEquals("nope", vm.uiState.value.pendingSnackbar)
     }
 
-    // ── Backwards-compat shim ─────────────────────────────────────────────────
-
-    @Test
-    fun `signOut shim delegates to onSignOut`() = runTest {
-        coEvery { auth.signOut() } returns Result.success(Unit)
-        val vm = makeVm()
-        advanceUntilIdle()
-        vm.signOut()
-        advanceUntilIdle()
-        assertTrue(vm.signedOut.value)
-    }
 }
