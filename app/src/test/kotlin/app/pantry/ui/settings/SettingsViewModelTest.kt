@@ -282,6 +282,28 @@ class SettingsViewModelTest {
         assertNotNull(vm.uiState.value.pendingSnackbar)
     }
 
+    // ── onRemoveMember ────────────────────────────────────────────────────────
+
+    @Test
+    fun `onRemoveMember success surfaces snackbar`() = runTest {
+        coEvery { households.removeMember("h1", "u2") } returns Result.success(Unit)
+        val vm = makeVm()
+        advanceUntilIdle()
+        vm.onRemoveMember("u2")
+        advanceUntilIdle()
+        assertEquals("Member removed", vm.uiState.value.pendingSnackbar)
+    }
+
+    @Test
+    fun `onRemoveMember failure surfaces error snackbar`() = runTest {
+        coEvery { households.removeMember("h1", "u2") } returns Result.failure(RuntimeException("nope"))
+        val vm = makeVm()
+        advanceUntilIdle()
+        vm.onRemoveMember("u2")
+        advanceUntilIdle()
+        assertEquals("nope", vm.uiState.value.pendingSnackbar)
+    }
+
     // ── Backwards-compat shim ─────────────────────────────────────────────────
 
     @Test
