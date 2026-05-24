@@ -160,7 +160,7 @@ fun SettingsScreen(
     }
 
     categoryToRename?.let { old ->
-        var input by rememberSaveable { mutableStateOf(old) }
+        var input by rememberSaveable(key = old) { mutableStateOf(old) }
         AlertDialog(
             onDismissRequest = { categoryToRename = null },
             title = { Text("Rename category") },
