@@ -38,3 +38,6 @@ ui-debug.log
 # OS
 .DS_Store
 Thumbs.db
+
+# Compiled scripts
+scripts/*.class
