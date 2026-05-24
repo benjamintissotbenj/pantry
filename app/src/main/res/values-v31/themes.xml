@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+ system splash screen. Inherits the base theme and adds
+         explicit splash attributes so the splash shows the basket-of-fruits
+         logo over a forest-green background. -->
+    <style name="Theme.Pantry" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/brand_forest_green</item>
+        <item name="android:statusBarColor">@color/brand_forest_green</item>
+        <item name="android:navigationBarColor">@color/brand_forest_green</item>
+        <item name="android:windowSplashScreenBackground">@color/brand_forest_green</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+    </style>
+</resources>

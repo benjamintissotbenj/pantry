@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base activity theme. Compose owns the actual UI; this theme exists so
+         the activity window has a forest-green background during the brief
+         moment before Compose renders. Inherits from Material 3 DayNight so
+         the system status/nav bars pick up the right colors. -->
+    <style name="Theme.Pantry" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/brand_forest_green</item>
+        <item name="android:statusBarColor">@color/brand_forest_green</item>
+        <item name="android:navigationBarColor">@color/brand_forest_green</item>
+    </style>
+</resources>

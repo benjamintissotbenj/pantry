@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Single source of truth for the brand color, referenced by themes.xml
+         (window background, splash) and ic_launcher_background.xml. -->
+    <color name="brand_forest_green">#2E7D32</color>
+</resources>

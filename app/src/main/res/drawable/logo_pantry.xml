@@ -1,0 +1,48 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Forest-green square background -->
+    <path
+        android:fillColor="#2E7D32"
+        android:pathData="M0,0 H108 V108 H0 Z" />
+
+    <!-- Basket body: gently-curving trapezoid in cream -->
+    <path
+        android:fillColor="#FFF8E1"
+        android:pathData="M28,58 Q54,52 80,58 L76,84 L32,84 Z" />
+
+    <!-- Thin weave lines across the basket body -->
+    <path
+        android:strokeColor="#E8DCB8"
+        android:strokeWidth="1.5"
+        android:fillColor="#00000000"
+        android:pathData="M30,66 Q54,62 78,66" />
+    <path
+        android:strokeColor="#E8DCB8"
+        android:strokeWidth="1.5"
+        android:fillColor="#00000000"
+        android:pathData="M31,74 Q54,70 77,74" />
+
+    <!-- Left fruit: apple-red circle -->
+    <path
+        android:fillColor="#C62828"
+        android:pathData="M36,46 m-10,0 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0" />
+
+    <!-- Centre fruit: pear-yellow circle, slightly larger -->
+    <path
+        android:fillColor="#F9A825"
+        android:pathData="M54,42 m-12,0 a12,12 0 1,0 24,0 a12,12 0 1,0 -24,0" />
+
+    <!-- Right fruit: grape-purple circle -->
+    <path
+        android:fillColor="#6A1B9A"
+        android:pathData="M72,46 m-10,0 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0" />
+
+    <!-- Leaf on the centre fruit, pointing up-right -->
+    <path
+        android:fillColor="#386A20"
+        android:pathData="M54,30 Q60,18 66,28 Q60,32 54,30 Z" />
+</vector>
