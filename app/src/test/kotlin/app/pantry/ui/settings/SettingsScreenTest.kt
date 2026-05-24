@@ -82,4 +82,29 @@ class SettingsScreenTest {
         compose.onNodeWithTag("btn_rename_save").performClick()
         io.mockk.verify { vm.onRenameHousehold("New name") }
     }
+
+    @Test
+    fun `tapping invite code row triggers onCopyCodeRequested`() {
+        val vm = makeVm(inviteCode = "AB1234")
+        compose.setContent { SettingsScreen(onSignedOut = {}, viewModel = vm) }
+        compose.onNodeWithTag("row_invite_code").performClick()
+        io.mockk.verify { vm.onCopyCodeRequested() }
+    }
+
+    @Test
+    fun `tapping share button triggers onShareCodeRequested`() {
+        val vm = makeVm(inviteCode = "AB1234")
+        compose.setContent { SettingsScreen(onSignedOut = {}, viewModel = vm) }
+        compose.onNodeWithTag("btn_share_code").performClick()
+        io.mockk.verify { vm.onShareCodeRequested() }
+    }
+
+    @Test
+    fun `regenerate confirm flow triggers onRegenerateCode`() {
+        val vm = makeVm()
+        compose.setContent { SettingsScreen(onSignedOut = {}, viewModel = vm) }
+        compose.onNodeWithTag("btn_regenerate_code").performClick()
+        compose.onNodeWithTag("btn_regenerate_confirm").performClick()
+        io.mockk.verify { vm.onRegenerateCode() }
+    }
 }
