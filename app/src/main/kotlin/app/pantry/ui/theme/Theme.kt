@@ -11,7 +11,8 @@ import androidx.compose.ui.platform.LocalContext
 @Composable
 fun PantryTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    // Brand colors win across devices; flip true at a call site to opt back into Material You.
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val colorScheme = when {
