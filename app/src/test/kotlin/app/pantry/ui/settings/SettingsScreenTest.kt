@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextReplacement
 import io.mockk.every
 import io.mockk.mockk
@@ -106,5 +107,41 @@ class SettingsScreenTest {
         compose.onNodeWithTag("btn_regenerate_code").performClick()
         compose.onNodeWithTag("btn_regenerate_confirm").performClick()
         io.mockk.verify { vm.onRegenerateCode() }
+    }
+
+    @Test
+    fun `non-creator does not see remove buttons`() {
+        val members = listOf(
+            MemberRow("u1", "Ben", "ben@example.com", isYou = true, canRemove = false),
+            MemberRow("u2", "Alice", "alice@example.com", isYou = false, canRemove = false),
+        )
+        val vm = makeVm(members = members)
+        compose.setContent { SettingsScreen(onSignedOut = {}, viewModel = vm) }
+        compose.onNodeWithTag("btn_remove_u2").assertDoesNotExist()
+    }
+
+    @Test
+    fun `creator sees remove button on other members but not self`() {
+        val members = listOf(
+            MemberRow("u1", "Ben", "ben@example.com", isYou = true, canRemove = false),
+            MemberRow("u2", "Alice", "alice@example.com", isYou = false, canRemove = true),
+        )
+        val vm = makeVm(members = members)
+        compose.setContent { SettingsScreen(onSignedOut = {}, viewModel = vm) }
+        compose.onNodeWithTag("btn_remove_u1").assertDoesNotExist()
+        compose.onNodeWithTag("btn_remove_u2").assertExists()
+    }
+
+    @Test
+    fun `tapping remove icon opens confirm and Remove fires VM`() {
+        val members = listOf(
+            MemberRow("u1", "Ben", "ben@example.com", isYou = true, canRemove = false),
+            MemberRow("u2", "Alice", "alice@example.com", isYou = false, canRemove = true),
+        )
+        val vm = makeVm(members = members)
+        compose.setContent { SettingsScreen(onSignedOut = {}, viewModel = vm) }
+        compose.onNodeWithTag("btn_remove_u2").performScrollTo().performClick()
+        compose.onNodeWithTag("btn_remove_confirm").performClick()
+        io.mockk.verify { vm.onRemoveMember("u2") }
     }
 }

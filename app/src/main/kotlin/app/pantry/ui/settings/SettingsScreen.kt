@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
@@ -58,6 +59,7 @@ fun SettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var renameHouseholdOpen by remember { mutableStateOf(false) }
     var regenerateConfirmOpen by remember { mutableStateOf(false) }
+    var memberToRemove by remember { mutableStateOf<MemberRow?>(null) }
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
 
@@ -139,6 +141,22 @@ fun SettingsScreen(
         )
     }
 
+    memberToRemove?.let { m ->
+        AlertDialog(
+            onDismissRequest = { memberToRemove = null },
+            title = { Text("Remove ${m.displayName}?") },
+            text = { Text("They'll lose access to the household.") },
+            confirmButton = {
+                TextButton(
+                    onClick = { viewModel.onRemoveMember(m.uid); memberToRemove = null },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    modifier = Modifier.testTag("btn_remove_confirm"),
+                ) { Text("Remove") }
+            },
+            dismissButton = { TextButton(onClick = { memberToRemove = null }) { Text("Cancel") } },
+        )
+    }
+
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding),
@@ -192,12 +210,21 @@ fun SettingsScreen(
                 SettingsSection("Members (${state.members.size})") {
                     state.members.forEach { m ->
                         SettingsRow(modifier = Modifier.testTag("row_member_${m.uid}")) {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                Text(
-                                    if (m.isYou) "${m.displayName} (you)" else m.displayName,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                )
-                                Text(m.email, style = MaterialTheme.typography.bodySmall)
+                            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        if (m.isYou) "${m.displayName} (you)" else m.displayName,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                    )
+                                    Text(m.email, style = MaterialTheme.typography.bodySmall)
+                                }
+                                if (m.canRemove) {
+                                    IconButton(
+                                        onClick = { memberToRemove = m },
+                                        enabled = !state.isOffline,
+                                        modifier = Modifier.testTag("btn_remove_${m.uid}"),
+                                    ) { Icon(Icons.Default.Close, contentDescription = "Remove") }
+                                }
                             }
                         }
                     }

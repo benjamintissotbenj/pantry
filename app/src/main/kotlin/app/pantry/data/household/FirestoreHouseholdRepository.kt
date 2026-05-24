@@ -6,6 +6,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.functions.FirebaseFunctions
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.channels.awaitClose
@@ -92,8 +93,13 @@ class FirestoreHouseholdRepository @Inject constructor(
         code
     }
 
-    override suspend fun removeMember(householdId: String, uid: String): Result<Unit> =
-        Result.failure(NotImplementedError("US-11 will implement"))
+    override suspend fun removeMember(householdId: String, uid: String): Result<Unit> = runCatching {
+        val functions = FirebaseFunctions.getInstance("europe-west1")
+        functions.getHttpsCallable("removeMember")
+            .call(mapOf("hid" to householdId, "uid" to uid))
+            .await()
+        Unit
+    }
 
     override suspend fun renameCategory(householdId: String, oldName: String, newName: String): Result<Int> =
         Result.failure(NotImplementedError("US-12 will implement"))
