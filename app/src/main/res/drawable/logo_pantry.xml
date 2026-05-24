@@ -14,17 +14,13 @@
         android:fillColor="#FFF8E1"
         android:pathData="M28,58 Q54,52 80,58 L76,84 L32,84 Z" />
 
-    <!-- Thin weave lines across the basket body -->
+    <!-- Two darker bands across the basket body to suggest weave -->
     <path
-        android:strokeColor="#E8DCB8"
-        android:strokeWidth="1.5"
-        android:fillColor="#00000000"
-        android:pathData="M30,66 Q54,62 78,66" />
+        android:fillColor="#E8DCB8"
+        android:pathData="M30,64 Q54,60 78,64 L78,68 Q54,64 30,68 Z" />
     <path
-        android:strokeColor="#E8DCB8"
-        android:strokeWidth="1.5"
-        android:fillColor="#00000000"
-        android:pathData="M31,74 Q54,70 77,74" />
+        android:fillColor="#E8DCB8"
+        android:pathData="M31,73 Q54,69 77,73 L77,77 Q54,73 31,77 Z" />
 
     <!-- Left fruit: apple-red circle -->
     <path

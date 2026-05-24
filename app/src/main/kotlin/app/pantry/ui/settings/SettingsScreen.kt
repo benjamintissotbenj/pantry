@@ -1,6 +1,7 @@
 package app.pantry.ui.settings
 
 import android.content.Intent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -46,6 +48,9 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import app.pantry.ui.common.OfflineBanner
@@ -313,11 +318,21 @@ fun SettingsScreen(
                 }
                 SettingsSection("About") {
                     SettingsRow {
-                        Text(
-                            "Pantry · v${state.appVersion}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.testTag("text_app_version"),
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Image(
+                                painter = painterResource(app.pantry.R.drawable.logo_pantry),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(RoundedCornerShape(6.dp)),
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "Pantry  v${state.appVersion}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.testTag("text_app_version"),
+                            )
+                        }
                     }
                 }
                 Spacer(Modifier.height(8.dp))
