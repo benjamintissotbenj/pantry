@@ -139,6 +139,7 @@ fun ShoppingListScreen(
                                 EntryRow(
                                     entry = entry,
                                     boughtQuantity = state.boughtQuantities[entry.id] ?: "",
+                                    isOffline = state.isOffline,
                                     onCheckedChange = { checked ->
                                         if (entry.source == ShoppingEntry.Source.AUTO) {
                                             entry.linkedItemId?.let(viewModel::onAutoEntryToggle)
@@ -159,6 +160,7 @@ fun ShoppingListScreen(
                                 EntryRow(
                                     entry = entry,
                                     boughtQuantity = state.boughtQuantities[entry.id] ?: "",
+                                    isOffline = state.isOffline,
                                     onCheckedChange = { checked ->
                                         viewModel.onManualEntryToggle(entry.id, checked)
                                     },
@@ -258,6 +260,7 @@ private fun CategorySubHeader(category: String) {
 private fun EntryRow(
     entry: ShoppingEntry,
     boughtQuantity: String,
+    isOffline: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     onQuantityChange: (String) -> Unit,
 ) {
@@ -271,6 +274,7 @@ private fun EntryRow(
         Checkbox(
             checked = entry.checked,
             onCheckedChange = onCheckedChange,
+            enabled = !isOffline,
             modifier = Modifier.testTag("checkbox_${entry.id}"),
         )
         Column(modifier = Modifier.weight(1f)) {
@@ -292,6 +296,7 @@ private fun EntryRow(
             BasicTextField(
                 value = boughtQuantity,
                 onValueChange = onQuantityChange,
+                enabled = !isOffline,
                 singleLine = true,
                 textStyle = MaterialTheme.typography.bodyMedium.copy(
                     color = MaterialTheme.colorScheme.onSurface,

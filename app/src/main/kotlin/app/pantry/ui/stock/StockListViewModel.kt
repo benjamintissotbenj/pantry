@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -46,7 +47,7 @@ class StockListViewModel @Inject constructor(
                 .catch { e ->
                     _state.update { it.copy(isLoading = false, errorMessage = e.message ?: "Failed to load stock") }
                 }
-                .collect { items ->
+                .collectLatest { items ->
                     _state.update { it.copy(isLoading = false, allItems = items, errorMessage = null) }
                 }
         }
