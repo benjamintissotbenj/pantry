@@ -18,6 +18,11 @@ google-services.json
 GoogleService-Info.plist
 *.jks
 *.keystore
+upload-keystore.jks
+keystore.properties
+
+# Play store assets — screenshots upload directly, not committed
+play-store/screenshots/
 
 # Functions
 functions/node_modules/
@@ -33,3 +38,6 @@ ui-debug.log
 # OS
 .DS_Store
 Thumbs.db
+
+# Compiled scripts
+scripts/*.class
