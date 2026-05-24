@@ -1,7 +1,8 @@
 package app.pantry.ui.settings
 
+import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import io.mockk.every
@@ -17,7 +18,7 @@ import org.robolectric.annotation.Config
 @Config(sdk = [34])
 class SettingsScreenTest {
 
-    @get:Rule val compose = createComposeRule()
+    @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
 
     private fun makeVm(
         householdName: String = "",

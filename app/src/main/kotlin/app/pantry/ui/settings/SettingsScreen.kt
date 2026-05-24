@@ -40,7 +40,9 @@ fun SettingsScreen(
 
     LaunchedEffect(state.signedOut) { if (state.signedOut) onSignedOut() }
     LaunchedEffect(state.pendingPostLeaveNav) {
-        if (state.pendingPostLeaveNav) { viewModel.consumeNav(); onLeft() }
+        if (!state.pendingPostLeaveNav) return@LaunchedEffect
+        onLeft()
+        viewModel.consumeNav()
     }
     LaunchedEffect(state.pendingSnackbar) {
         val msg = state.pendingSnackbar ?: return@LaunchedEffect
