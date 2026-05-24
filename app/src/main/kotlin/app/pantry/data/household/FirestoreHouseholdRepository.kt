@@ -92,6 +92,15 @@ class FirestoreHouseholdRepository @Inject constructor(
         code
     }
 
+    override suspend fun removeMember(householdId: String, uid: String): Result<Unit> =
+        Result.failure(NotImplementedError("US-11 will implement"))
+
+    override suspend fun renameCategory(householdId: String, oldName: String, newName: String): Result<Int> =
+        Result.failure(NotImplementedError("US-12 will implement"))
+
+    override suspend fun leaveHousehold(householdId: String): Result<Unit> =
+        Result.failure(NotImplementedError("US-13 will implement"))
+
     private fun DocumentSnapshot.toHousehold(): Household? {
         if (!exists()) return null
         @Suppress("UNCHECKED_CAST")

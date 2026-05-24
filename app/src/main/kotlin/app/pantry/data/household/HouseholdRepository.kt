@@ -14,4 +14,7 @@ interface HouseholdRepository {
     ): Result<Household>
     suspend fun rename(householdId: String, newName: String): Result<Unit>
     suspend fun regenerateInviteCode(householdId: String): Result<String>
+    suspend fun removeMember(householdId: String, uid: String): Result<Unit>
+    suspend fun renameCategory(householdId: String, oldName: String, newName: String): Result<Int>
+    suspend fun leaveHousehold(householdId: String): Result<Unit>
 }
