@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -33,6 +35,22 @@ android {
         buildConfigField("boolean", "USE_FIREBASE_EMULATOR", useFirebaseEmulator)
     }
 
+    signingConfigs {
+        create("release") {
+            val keystorePropsFile = rootProject.file("keystore.properties")
+            if (keystorePropsFile.exists()) {
+                val props = Properties().apply { keystorePropsFile.inputStream().use(::load) }
+                storeFile = rootProject.file(props.getProperty("storeFile"))
+                storePassword = props.getProperty("storePassword")
+                keyAlias = props.getProperty("keyAlias")
+                keyPassword = props.getProperty("keyPassword")
+            }
+            // When keystore.properties is missing (CI, fresh clone), storeFile stays null
+            // and `:app:bundleRelease` fails loudly at signing — that's the contract;
+            // no silent fallback to the debug key for a release artifact.
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
@@ -40,8 +58,9 @@ android {
         }
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.getByName("debug") // replace before Play release
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
