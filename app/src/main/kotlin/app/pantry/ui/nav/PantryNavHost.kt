@@ -34,6 +34,7 @@ fun PantryNavHost(
             HouseholdOnboardingScreen(
                 onCreated = { navController.navigate(PantryRoute.Home.path) { popUpTo(PantryRoute.Household.path) { inclusive = true } } },
                 onJoined = { navController.navigate(PantryRoute.Home.path) { popUpTo(PantryRoute.Household.path) { inclusive = true } } },
+                onSignedOut = { navController.navigate(PantryRoute.Auth.path) { popUpTo(0) { inclusive = true } } },
             )
         }
         composable(PantryRoute.Home.path) {
@@ -42,7 +43,12 @@ fun PantryNavHost(
                     navController.navigate(PantryRoute.Auth.path) {
                         popUpTo(0) { inclusive = true }
                     }
-                }
+                },
+                onLeft = {
+                    navController.navigate(PantryRoute.Household.path) {
+                        popUpTo(PantryRoute.Home.path) { inclusive = true }
+                    }
+                },
             )
         }
     }

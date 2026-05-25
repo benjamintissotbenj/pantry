@@ -8,7 +8,7 @@ const db = admin.firestore();
 interface Payload { hid?: string }
 
 export const leaveHousehold = onCall<Payload>(
-  { region: "europe-west1" },
+  { region: "europe-west1", invoker: "public" },
   async (request) => {
     const uid = request.auth?.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Sign-in required");

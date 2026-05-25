@@ -33,6 +33,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 fun HouseholdOnboardingScreen(
     onCreated: () -> Unit,
     onJoined: () -> Unit,
+    onSignedOut: () -> Unit,
     viewModel: HouseholdOnboardingViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -45,6 +46,9 @@ fun HouseholdOnboardingScreen(
             // For both create and join, "navigateToHome" is the signal — caller decides where to go.
             if (navigatingFrom == HouseholdOnboardingUiState.Mode.Create) onCreated() else onJoined()
         }
+    }
+    LaunchedEffect(state.navigateToAuth) {
+        if (state.navigateToAuth) { viewModel.consumeAuthNavigation(); onSignedOut() }
     }
     LaunchedEffect(state.toast) {
         state.toast?.let { snackbar.showSnackbar(it); viewModel.consumeToast() }
@@ -109,6 +113,11 @@ fun HouseholdOnboardingScreen(
                     ) { Text(if (state.isSubmitting) "Joining…" else "Join") }
                 }
             }
+            Spacer(Modifier.height(32.dp))
+            TextButton(
+                onClick = viewModel::signOut,
+                modifier = Modifier.testTag("sign_out_btn"),
+            ) { Text("Sign out", color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
     }
 }

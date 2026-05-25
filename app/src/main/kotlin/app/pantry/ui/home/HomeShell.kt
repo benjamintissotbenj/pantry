@@ -25,7 +25,7 @@ import app.pantry.ui.shopping.ShoppingListScreen
 import app.pantry.ui.stock.StockListScreen
 
 @Composable
-fun HomeShell(onSignedOut: () -> Unit) {
+fun HomeShell(onSignedOut: () -> Unit, onLeft: () -> Unit) {
     val tabSaver = Saver<HomeTab, String>(
         save = { it.name },
         restore = { HomeTab.valueOf(it) },
@@ -63,7 +63,7 @@ fun HomeShell(onSignedOut: () -> Unit) {
             when (tab) {
                 HomeTab.Stock -> StockListScreen()
                 HomeTab.Shopping -> ShoppingListScreen()
-                HomeTab.Settings -> SettingsScreen(onSignedOut = onSignedOut)
+                HomeTab.Settings -> SettingsScreen(onSignedOut = onSignedOut, onLeft = onLeft)
             }
         }
     }

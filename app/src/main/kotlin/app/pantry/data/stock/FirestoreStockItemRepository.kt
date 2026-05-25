@@ -5,6 +5,7 @@ import app.pantry.domain.model.StockUnit
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -23,7 +24,11 @@ class FirestoreStockItemRepository @Inject constructor(
 
     override fun observe(householdId: String): Flow<List<StockItem>> = callbackFlow {
         val reg = itemsCol(householdId).addSnapshotListener { qs, error ->
-            if (error != null) { close(error); return@addSnapshotListener }
+            if (error != null) {
+                if (error.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) { trySend(emptyList()); close() }
+                else close(error)
+                return@addSnapshotListener
+            }
             trySend(qs?.documents.orEmpty().mapNotNull { it.toStockItem() })
         }
         awaitClose { reg.remove() }

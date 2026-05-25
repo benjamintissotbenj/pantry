@@ -5,6 +5,7 @@ import app.pantry.domain.model.MemberSummary
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.functions.FirebaseFunctions
 import javax.inject.Inject
@@ -23,7 +24,18 @@ class FirestoreHouseholdRepository @Inject constructor(
     override fun observe(householdId: String): Flow<Household?> = callbackFlow {
         val reg = firestore.collection("households").document(householdId)
             .addSnapshotListener { snap, error ->
-                if (error != null) { close(error); return@addSnapshotListener }
+                if (error != null) {
+                    // PERMISSION_DENIED fires when the user is removed from memberUids and the
+                    // security rule revokes the listener. Treat it as "no longer a member" and
+                    // close the flow cleanly rather than crashing.
+                    if (error.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                        trySend(null)
+                        close()
+                    } else {
+                        close(error)
+                    }
+                    return@addSnapshotListener
+                }
                 trySend(snap?.toHousehold())
             }
         awaitClose { reg.remove() }
@@ -33,7 +45,11 @@ class FirestoreHouseholdRepository @Inject constructor(
         val reg = firestore.collection("households")
             .whereArrayContains("memberUids", uid)
             .addSnapshotListener { qs, error ->
-                if (error != null) { close(error); return@addSnapshotListener }
+                if (error != null) {
+                    if (error.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) { trySend(emptyList()); close() }
+                    else close(error)
+                    return@addSnapshotListener
+                }
                 trySend(qs?.documents.orEmpty().mapNotNull { it.toHousehold() })
             }
         awaitClose { reg.remove() }

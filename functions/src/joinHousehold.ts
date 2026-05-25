@@ -9,7 +9,7 @@ interface Payload {
 }
 
 export const joinHousehold = onCall<Payload>(
-  { region: "europe-west1" },
+  { region: "europe-west1", invoker: "public" },
   async (request) => {
     const uid = request.auth?.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Sign-in required");
@@ -36,8 +36,13 @@ export const joinHousehold = onCall<Payload>(
 
     await db.runTransaction(async (tx) => {
       const userDoc = await tx.get(db.collection("users").doc(uid));
-      const displayName = (userDoc.get("displayName") as string | undefined) ?? "";
-      const email = (userDoc.get("email") as string | undefined) ?? "";
+      // Prefer stored profile values; fall back to the Firebase Auth token fields which
+      // are always present and authoritative (covers email+password accounts that have
+      // no displayName/email written to their Firestore user doc yet).
+      const tokenName  = (request.auth!.token as Record<string, unknown>).name  as string | undefined;
+      const tokenEmail = (request.auth!.token as Record<string, unknown>).email as string | undefined;
+      const displayName = ((userDoc.get("displayName") as string | undefined) || tokenName  || "").trim();
+      const email       = ((userDoc.get("email")       as string | undefined) || tokenEmail || "").trim();
 
       const memberPath = `members.${uid}`;
       tx.update(householdDoc.ref, {

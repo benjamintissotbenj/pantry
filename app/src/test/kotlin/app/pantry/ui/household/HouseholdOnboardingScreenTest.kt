@@ -44,6 +44,7 @@ class HouseholdOnboardingScreenTest {
             HouseholdOnboardingScreen(
                 onCreated = { created = true },
                 onJoined = {},
+                onSignedOut = {},
                 viewModel = HouseholdOnboardingViewModel(authRepo, householdRepo, joinGateway),
             )
         }

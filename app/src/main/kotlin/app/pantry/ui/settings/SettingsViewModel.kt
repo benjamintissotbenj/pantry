@@ -71,7 +71,9 @@ class SettingsViewModel @Inject constructor(
             val summary = hh?.members?.get(memberUid)
             MemberRow(
                 uid = memberUid,
-                displayName = summary?.displayName ?: "—",
+                displayName = summary?.displayName?.takeIf { it.isNotBlank() }
+                    ?: summary?.email?.takeIf { it.isNotBlank() }
+                    ?: "—",
                 email = summary?.email ?: "",
                 isYou = memberUid == uid,
                 canRemove = isCreator && memberUid != uid,

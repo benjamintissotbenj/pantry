@@ -9,6 +9,7 @@ data class HouseholdOnboardingUiState(
     val isSubmitting: Boolean = false,
     val toast: String? = null,
     val navigateToHome: Boolean = false,
+    val navigateToAuth: Boolean = false,
 ) {
     enum class Mode { Welcome, Create, Join }
     val canSubmitCreate: Boolean

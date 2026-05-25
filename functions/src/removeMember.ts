@@ -7,7 +7,7 @@ const db = admin.firestore();
 interface Payload { hid?: string; uid?: string }
 
 export const removeMember = onCall<Payload>(
-  { region: "europe-west1" },
+  { region: "europe-west1", invoker: "public" },
   async (request) => {
     const callerUid = request.auth?.uid;
     if (!callerUid) throw new HttpsError("unauthenticated", "Sign-in required");

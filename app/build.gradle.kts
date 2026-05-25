@@ -78,6 +78,14 @@ android {
     }
     packaging { resources.excludes += "/META-INF/{AL2.0,LGPL2.1}" }
 
+    applicationVariants.all {
+        val vName = versionName
+        outputs.all {
+            (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName =
+                if (buildType.name == "release") "pantry-$vName.apk" else outputFileName
+        }
+    }
+
     testOptions {
         unitTests.isIncludeAndroidResources = true
         val includeEmulator = providers.gradleProperty("includeEmulatorTests").isPresent

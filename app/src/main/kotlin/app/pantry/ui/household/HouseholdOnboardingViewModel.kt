@@ -72,7 +72,8 @@ class HouseholdOnboardingViewModel @Inject constructor(
                         when (e) {
                             JoinHouseholdError.NotFound,
                             JoinHouseholdError.AlreadyMember -> it.copy(isSubmitting = false, inviteError = e.message)
-                            JoinHouseholdError.NoNetwork     -> it.copy(isSubmitting = false, toast = e.message)
+                            JoinHouseholdError.NoNetwork,
+                            JoinHouseholdError.NotAuthenticated -> it.copy(isSubmitting = false, toast = e.message)
                             else                             -> it.copy(isSubmitting = false, toast = e.message ?: "Failed to join household")
                         }
                     }
@@ -81,6 +82,14 @@ class HouseholdOnboardingViewModel @Inject constructor(
         }
     }
 
+    fun signOut() {
+        viewModelScope.launch {
+            auth.signOut()
+            _state.update { it.copy(navigateToAuth = true) }
+        }
+    }
+
     fun consumeNavigation() = _state.update { it.copy(navigateToHome = false) }
+    fun consumeAuthNavigation() = _state.update { it.copy(navigateToAuth = false) }
     fun consumeToast() = _state.update { it.copy(toast = null) }
 }

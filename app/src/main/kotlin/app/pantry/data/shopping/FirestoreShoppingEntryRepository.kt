@@ -2,8 +2,9 @@ package app.pantry.data.shopping
 
 import app.pantry.domain.model.ShoppingEntry
 import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import java.time.Instant
 import javax.inject.Inject
@@ -28,7 +29,11 @@ class FirestoreShoppingEntryRepository @Inject constructor(
         val reg = col(householdId)
             .orderBy("createdAt", Query.Direction.ASCENDING)
             .addSnapshotListener { qs, error ->
-                if (error != null) { close(error); return@addSnapshotListener }
+                if (error != null) {
+                    if (error.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) { trySend(emptyList()); close() }
+                    else close(error)
+                    return@addSnapshotListener
+                }
                 trySend(qs?.documents.orEmpty().mapNotNull { it.toShoppingEntry() })
             }
         awaitClose { reg.remove() }
